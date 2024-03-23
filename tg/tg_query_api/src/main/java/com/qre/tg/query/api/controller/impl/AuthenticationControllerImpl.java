@@ -5,6 +5,8 @@ import com.qre.tg.dto.user.UserRequest;
 import com.qre.tg.query.api.controller.AuthenticationController;
 import com.qre.tg.query.api.service.impl.AuthenticationServiceImpl;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,13 +32,26 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AuthenticationControllerImpl implements AuthenticationController {
 
+    private static final Logger logger = LoggerFactory.getLogger(AuthenticationControllerImpl.class);
+
     private final AuthenticationServiceImpl service;
 
     @PostMapping("/Register")
     public ResponseEntity<AuthenticationResponse> register(
             @RequestBody UserRequest userRequest
     ) {
-        return ResponseEntity.ok(service.register(userRequest));
+        AuthenticationResponse response;
+        try {
+            response = service.register(userRequest);
+        } catch (IllegalArgumentException e) {
+            logger.error("Bad Request during user registration: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("Unexpected error during user registration", e);
+            return ResponseEntity.internalServerError().build();
+        }
+        return ResponseEntity.ok(response);
     }
 
 }
