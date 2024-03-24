@@ -5,25 +5,13 @@ import com.qre.tg.dto.auth.AuthenticationResponse;
 import com.qre.tg.dto.user.UserRequest;
 import com.qre.tg.entity.user.User;
 
+import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 
-/**
- * AuthenticationService
- *
- * @author Zaw
- * @since 1.0
- * <p>
- * <pre>
- * Revision History:
- * Version  Date            Author          Changes
- * ------------------------------------------------------------------------------------------------------------------------
- * 1.0      13/2/2024     Zaw           Initial Coding
- *
- * </pre>
- */
 public interface AuthenticationService {
 
-    AuthenticationResponse register(UserRequest userRequest);
+    AuthenticationResponse register(UserRequest userRequest) throws MessagingException, IOException;
 
     AuthenticationResponse authenticate(AuthenticationRequest request);
 

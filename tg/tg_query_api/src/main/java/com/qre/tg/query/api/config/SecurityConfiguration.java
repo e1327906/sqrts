@@ -39,7 +39,9 @@ public class SecurityConfiguration {
             "/api/v1/fares/**",
             "/api/v1/payments/**",
             "/api/v1/otp/**",
-            "/api/v1/routes/**"
+            "/api/v1/routes/**",
+            "/api/v1/validator/**",
+            "/api/v1/users/**"
     };
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
@@ -48,7 +50,7 @@ public class SecurityConfiguration {
     @Bean
     public RoleHierarchy roleHierarchy() {
         RoleHierarchyImpl roleHierarchy = new RoleHierarchyImpl();
-        String hierarchy = "ROLE_ADMIN > ROLE_USER";
+        String hierarchy = "ROLE_ADMIN > ROLE_OPERATOR > ROLE_USER";
         roleHierarchy.setHierarchy(hierarchy);
         return roleHierarchy;
     }

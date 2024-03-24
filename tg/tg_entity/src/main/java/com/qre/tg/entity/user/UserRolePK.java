@@ -1,27 +1,11 @@
 package com.qre.tg.entity.user;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.qre.tg.entity.base.DbFieldName;
+import lombok.*;
 
 import java.io.Serializable;
 import java.util.UUID;
 
-/**
- * UserRolePK
- *
- * @author Zaw
- * @since 1.0
- * <p>
- * <pre>
- * Revision History:
- * Version  Date            Author          Changes
- * ------------------------------------------------------------------------------------------------------------------------
- * 1.0      13/2/2024     Zaw           Initial Coding
- *
- * </pre>
- */
 @Getter
 @Setter
 @NoArgsConstructor

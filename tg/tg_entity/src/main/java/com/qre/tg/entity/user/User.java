@@ -1,28 +1,16 @@
 package com.qre.tg.entity.user;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.qre.tg.entity.base.AbstractPersistableEntity;
 import com.qre.tg.entity.base.DbFieldName;
 import com.qre.tg.entity.token.Token;
 import lombok.*;
 
 import javax.persistence.*;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
-/**
- * User
- *
- * @author Zaw
- * @since 1.0
- * <p>
- * <pre>
- * Revision History:
- * Version  Date            Author          Changes
- * ------------------------------------------------------------------------------------------------------------------------
- * 1.0      13/2/2024     Zaw           Initial Coding
- *
- * </pre>
- */
 @Getter
 @Setter
 @Builder
@@ -48,6 +36,7 @@ public class User extends AbstractPersistableEntity<UUID>{
     private String email;
 
     @Column(name = DbFieldName.PASSWORD)
+    @JsonIgnore
     private String password;
 
     @ManyToMany(cascade = CascadeType.MERGE)
@@ -56,9 +45,11 @@ public class User extends AbstractPersistableEntity<UUID>{
             joinColumns = @JoinColumn(name = DbFieldName.USER_ID),
             inverseJoinColumns = @JoinColumn(name = DbFieldName.ROLE_ID)
     )
+    @JsonIgnore
     private Set<Role> roles;
 
     @OneToMany(mappedBy = DbFieldName.USER)
+    @JsonIgnore
     private Set<Token> tokens;
 
     @Column(name = DbFieldName.REGISTER_WITH_EMAIL)

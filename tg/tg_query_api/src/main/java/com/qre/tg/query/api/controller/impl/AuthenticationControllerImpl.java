@@ -13,20 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * AuthenticationControllerImpl
- *
- * @author Zaw
- * @since 1.0
- * <p>
- * <pre>
- * Revision History:
- * Version  Date            Author          Changes
- * ------------------------------------------------------------------------------------------------------------------------
- * 1.0      13/2/2024     Zaw           Initial Coding
- *
- * </pre>
- */
+import javax.validation.Valid;
+
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
@@ -37,9 +25,8 @@ public class AuthenticationControllerImpl implements AuthenticationController {
     private final AuthenticationServiceImpl service;
 
     @PostMapping("/Register")
-    public ResponseEntity<AuthenticationResponse> register(
-            @RequestBody UserRequest userRequest
-    ) {
+    public ResponseEntity<AuthenticationResponse> register(@Valid @RequestBody UserRequest userRequest) {
+
         AuthenticationResponse response;
         try {
             response = service.register(userRequest);

@@ -8,20 +8,6 @@ import javax.persistence.*;
 import java.util.Collection;
 import java.util.UUID;
 
-/**
- * Privilege
- *
- * @author Zaw
- * @since 1.0
- * <p>
- * <pre>
- * Revision History:
- * Version  Date            Author          Changes
- * ------------------------------------------------------------------------------------------------------------------------
- * 1.0      13/2/2024     Zaw           Initial Coding
- *
- * </pre>
- */
 @Getter
 @Setter
 @Entity
