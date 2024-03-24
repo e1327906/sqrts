@@ -1,13 +1,16 @@
 
 package com.qre.tg.query.api.service.impl;
 
+import com.qre.tg.dao.user.RoleRepository;
 import com.qre.tg.dao.user.UserRepository;
 import com.qre.tg.dto.user.ChangePasswordRequest;
+import com.qre.tg.dto.user.UserRequest;
 import com.qre.tg.entity.user.Privilege;
 import com.qre.tg.entity.user.Role;
 import com.qre.tg.entity.user.User;
 import com.qre.tg.query.api.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -18,10 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Transactional
 @Service
@@ -52,6 +52,11 @@ public class UserServiceImpl implements UserService {
 
         // save the new password
         userRepository.save(user);
+    }
+
+    @Override
+    public List<User> getAllUser() {
+        return userRepository.findAll();
     }
 
     @Override
