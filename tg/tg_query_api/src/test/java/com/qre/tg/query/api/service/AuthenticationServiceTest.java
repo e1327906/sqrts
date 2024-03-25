@@ -5,6 +5,7 @@ import com.qre.cmel.otp.sdk.service.OtpService;
 import com.qre.tg.dao.token.TokenRepository;
 import com.qre.tg.dao.user.RoleRepository;
 import com.qre.tg.dao.user.UserRepository;
+import com.qre.tg.dto.auth.AuthenticationRequest;
 import com.qre.tg.dto.auth.AuthenticationResponse;
 import com.qre.tg.dto.user.UserRequest;
 import com.qre.tg.entity.user.Role;
@@ -22,11 +23,16 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.mail.MessagingException;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -61,6 +67,9 @@ class AuthenticationServiceTest {
 
     @InjectMocks
     private AuthenticationServiceImpl service;
+
+    @Mock
+    private AuthenticationManager authenticationManager;
 
     @Test
     void register_SuccessfulReturnsAccessTokenAndRefreshToken() throws MessagingException, IOException {
@@ -136,4 +145,46 @@ class AuthenticationServiceTest {
         assertThrows(IllegalArgumentException.class, () -> service.register(userRequest));
 
     }
+
+    @Test
+    void testAuthenticate() {
+        // Mock AuthenticationRequest
+        AuthenticationRequest request = new AuthenticationRequest("test@example.com", "password");
+
+        // Mock Authentication and User
+        User user = new User();
+        user.setEmail(request.getEmail());
+        user.setUserName("testUser");
+        Role role = Role.builder()
+                .name(RoleType.ROLE_USER)
+                .build();
+        Set<Role> roles = Collections.singleton(role);
+        user.setRoles(roles);
+
+        Authentication authentication = mock(Authentication.class);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        // Mock repository and jwtService methods
+        when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(user));
+        when(jwtService.generateToken(user)).thenReturn("mockedToken");
+        when(jwtService.generateRefreshToken(user)).thenReturn("mockedRefreshToken");
+
+        // Call the authenticate method
+        AuthenticationResponse response = service.authenticate(request);
+
+        // Verify interactions
+        verify(authenticationManager).authenticate(any(Authentication.class));
+        verify(userRepository).findByEmail(request.getEmail());
+        verify(jwtService).generateToken(user);
+        verify(jwtService).generateRefreshToken(user);
+
+        // Assertions
+        assertNotNull(response);
+        assertEquals("mockedToken", response.getAccessToken());
+        assertEquals("mockedRefreshToken", response.getRefreshToken());
+        assertEquals("test@example.com", response.getEmail());
+        assertEquals("ROLE_USER", response.getRole());
+        assertEquals("testUser", response.getUserName());
+    }
+
 }
