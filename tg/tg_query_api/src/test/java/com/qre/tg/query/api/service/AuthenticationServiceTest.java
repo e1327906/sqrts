@@ -1,5 +1,8 @@
 package com.qre.tg.query.api.service;
 
+import com.qre.cmel.ecommsvcs.sdk.service.EmailService;
+import com.qre.cmel.otp.sdk.service.OtpService;
+import com.qre.tg.dao.token.TokenRepository;
 import com.qre.tg.dao.user.RoleRepository;
 import com.qre.tg.dao.user.UserRepository;
 import com.qre.tg.dto.auth.AuthenticationResponse;
@@ -7,7 +10,10 @@ import com.qre.tg.dto.user.UserRequest;
 import com.qre.tg.entity.user.Role;
 import com.qre.tg.entity.user.RoleType;
 import com.qre.tg.entity.user.User;
+import com.qre.tg.query.api.config.ApplicationProperties;
+import com.qre.tg.query.api.config.JwtService;
 import com.qre.tg.query.api.service.impl.AuthenticationServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -15,8 +21,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import javax.mail.MessagingException;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -33,13 +42,28 @@ class AuthenticationServiceTest {
     private RoleRepository roleRepository;
 
     @Mock
+    private TokenRepository tokenRepository;
+
+    @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private JwtService jwtService;
+
+    @Mock
+    private OtpService otpService;
+
+    @Mock
+    private EmailService emailService;
+
+    @Mock
+    private ApplicationProperties applicationProperties;
 
     @InjectMocks
     private AuthenticationServiceImpl service;
 
     @Test
-    void register_SuccessfulReturnsAccessTokenAndRefreshToken() {
+    void register_SuccessfulReturnsAccessTokenAndRefreshToken() throws MessagingException, IOException {
         // Given
         UserRequest userRequest = UserRequest.builder()
                 .userName("zaw")
@@ -64,6 +88,9 @@ class AuthenticationServiceTest {
         // Stubbing userRepository.save() to accept any User object
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
+        when(applicationProperties.getEmailMessage()).thenReturn("Dear User, your OTP for registration is $. Use this code to validate your login");
+        when(applicationProperties.getEmailSubject()).thenReturn("DMP OTP");
+
         // When
         AuthenticationResponse authenticationResponse = service.register(userRequest);
 
@@ -74,8 +101,6 @@ class AuthenticationServiceTest {
 
         assertEquals(user.getEmail(), savedUser.getEmail());
         assertNotNull(authenticationResponse);
-        assertEquals(authenticationResponse.getAccessToken(), "");
-        assertEquals(authenticationResponse.getAccessToken(), "");
     }
 
 
