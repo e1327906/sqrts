@@ -94,6 +94,7 @@ class AuthenticationControllerTest {
         ResponseEntity<AuthenticationResponse> response = controller.register(request);
 
         // Then
+
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode(), "Should return HTTP Internal Server Error");
         assertNull(response.getBody(), "Response body should be null for service exceptions");
     }
