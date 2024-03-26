@@ -15,6 +15,7 @@ import com.qre.tg.query.api.service.impl.AuthenticationServiceImpl;
 import com.qre.tg.query.api.service.impl.TicketServiceImpl;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -36,7 +37,7 @@ public class PurchaseTicketServiceTest {
     private TicketMasterRepository ticketMasterRepository;
 
     private PurchaseTicketRequest request;
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         PurchaseTicketRequest request = new PurchaseTicketRequest();
         request.setJourneyType(2);
