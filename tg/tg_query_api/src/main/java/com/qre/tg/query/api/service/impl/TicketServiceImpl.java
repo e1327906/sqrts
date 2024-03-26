@@ -1,8 +1,7 @@
 package com.qre.tg.query.api.service.impl;
 
+import com.qre.tg.common.TicketStatusEnum;
 import com.qre.tg.query.api.service.TicketService;
-
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.zxing.BarcodeFormat;
@@ -25,15 +24,13 @@ import com.qre.tg.dto.qr.PurchaseTicketRequest;
 import com.qre.tg.dto.qr.TicketDetailResponse;
 import com.qre.tg.entity.route.Station;
 import com.qre.tg.entity.ticket.*;
-import com.qre.tg.query.api.common.JourneyTypeEnum;
-import com.qre.tg.query.api.common.TicketStatusEnum;
+
 import com.qre.tg.query.api.config.ApplicationProperties;
-import com.qre.tg.query.api.service.TrainRouteService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-
+import com.qre.tg.common.JourneyTypeEnum;
 import javax.transaction.Transactional;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -122,7 +119,7 @@ public class TicketServiceImpl implements TicketService {
             });
         }
 
-        return new newTicketData;
+        return newTicketData;
     }
 
 

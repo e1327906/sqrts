@@ -1,8 +1,7 @@
 package com.qre.tg.query.api.controller;
-import com.qre.tg.dto.auth.AuthenticationResponse;
+import com.qre.tg.dao.ticket.TicketMasterRepository;
 import com.qre.tg.dto.base.APIResponse;
 import com.qre.tg.dto.qr.PurchaseTicketRequest;
-import com.qre.tg.entity.ticket.TicketMaster;
 import com.qre.tg.query.api.controller.impl.TicketServiceControllerImpl;
 import com.qre.tg.query.api.service.impl.TicketServiceImpl;
 import org.junit.jupiter.api.AfterEach;
