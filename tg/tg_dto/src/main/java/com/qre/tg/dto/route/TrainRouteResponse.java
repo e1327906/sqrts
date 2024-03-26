@@ -20,3 +20,4 @@ public class TrainRouteResponse implements Serializable {
     @JsonProperty(JsonFieldName.STN_NAME)
     private String stnName;
 }
+

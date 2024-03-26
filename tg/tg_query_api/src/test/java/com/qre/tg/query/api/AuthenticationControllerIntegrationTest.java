@@ -36,10 +36,10 @@ class AuthenticationControllerIntegrationTest {
         // given - setup or precondition
         // Given
         UserRequest request = UserRequest.builder()
-                .userName("zaw")
-                .email("zaw@gmail.com")
+                .userName("zawmin")
+                .email("zawmin@gmail.com")
                 .phoneNumber("1122334455")
-                .password("zaw")
+                .password("P@ssw0rd")
                 .role(RoleType.ROLE_USER.name())
                 .build();
 
