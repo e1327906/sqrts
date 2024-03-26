@@ -193,7 +193,7 @@ public class TicketServiceImpl implements TicketService {
                 , applicationProperties.getPrivateKeyPath());
     }
 
-    private List<JourneyDetails> getJourneyDetails(PurchaseTicketRequest request) {
+    public List<JourneyDetails> getJourneyDetails(PurchaseTicketRequest request) {
 
         List<JourneyDetails> journeyDetailsList = new ArrayList<>();
 

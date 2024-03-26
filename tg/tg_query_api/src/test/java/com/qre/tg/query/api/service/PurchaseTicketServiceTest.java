@@ -5,27 +5,23 @@ import com.qre.tg.dao.user.RoleRepository;
 import com.qre.tg.dao.user.UserRepository;
 import com.qre.tg.dto.auth.AuthenticationResponse;
 import com.qre.tg.dto.qr.PurchaseTicketRequest;
+import com.qre.tg.dto.qr.TicketDetailResponse;
 import com.qre.tg.dto.user.UserRequest;
-import com.qre.tg.entity.ticket.AdditionalInfo;
-import com.qre.tg.entity.ticket.Security;
-import com.qre.tg.entity.ticket.TicketMaster;
-import com.qre.tg.entity.ticket.TransactionData;
+import com.qre.tg.entity.ticket.*;
 import com.qre.tg.entity.user.Role;
 import com.qre.tg.entity.user.RoleType;
 import com.qre.tg.entity.user.User;
 import com.qre.tg.query.api.service.impl.AuthenticationServiceImpl;
 import com.qre.tg.query.api.service.impl.TicketServiceImpl;
 import org.assertj.core.api.Assertions;
+import org.junit.Before;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -38,9 +34,10 @@ public class PurchaseTicketServiceTest {
 
     @Mock
     private TicketMasterRepository ticketMasterRepository;
-    @Test
-    void purchaseTicket_ReturnTicketMaster() throws Exception {
 
+    private PurchaseTicketRequest request;
+    @Before
+    public void setUp() throws Exception {
         PurchaseTicketRequest request = new PurchaseTicketRequest();
         request.setJourneyType(2);
         request.setGroupSize(3);
@@ -56,8 +53,24 @@ public class PurchaseTicketServiceTest {
         request.setAmount(0L);
         request.setCurrency("test_currency");
 
+    }
+    @Test
+    void purchaseTicket_ReturnTicketMaster() throws Exception {
        TicketMaster ticketMaster = ticketService.purchaseTicket(request);
        Assertions.assertThat(ticketMaster).isNotNull();
     }
 
+    @Test
+    void findAllByEmail_ReturnTicketList() throws Exception {
+        List<TicketDetailResponse> ticketList = ticketService.findAllByEmail("younmemeaung@gmail.com");
+        Assertions.assertThat(ticketList).isNotNull();
+        Assertions.assertThat(ticketList).hasSizeGreaterThan(0);
+    }
+
+    @Test
+    void getJourneyDetail_ReturnJourneyDetailList() {
+        List<JourneyDetails> journeyDetailsList = ticketService.getJourneyDetails(request);
+        Assertions.assertThat(journeyDetailsList).isNotNull();
+        Assertions.assertThat(journeyDetailsList).hasSizeGreaterThan(0);
+    }
 }
