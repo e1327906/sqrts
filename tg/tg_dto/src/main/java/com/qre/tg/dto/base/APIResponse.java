@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.net.HttpRetryException;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,5 +21,6 @@ public class APIResponse {
 
     @JsonProperty("ResponseData")
     private Object responseData;
+
 }
 

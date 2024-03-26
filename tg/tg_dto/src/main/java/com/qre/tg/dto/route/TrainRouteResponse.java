@@ -1,5 +1,4 @@
 package com.qre.tg.dto.route;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qre.tg.dto.base.JsonFieldName;
 import lombok.AllArgsConstructor;
@@ -21,3 +20,4 @@ public class TrainRouteResponse implements Serializable {
     @JsonProperty(JsonFieldName.STN_NAME)
     private String stnName;
 }
+
