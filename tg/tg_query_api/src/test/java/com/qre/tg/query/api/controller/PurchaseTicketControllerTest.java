@@ -12,6 +12,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 
+import java.util.Date;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -39,18 +41,17 @@ public class PurchaseTicketControllerTest {
         PurchaseTicketRequest request = new PurchaseTicketRequest();
         request.setJourneyType(2);
         request.setGroupSize(3);
-        request.setStartDatetime(new Date().getTime());
         request.setEndDatetime(new Date().getTime() + 3600 * 1000); // Adding one hour
         request.setPaymentRefNo("REF123");
         request.setAmount(100L);
         request.setCurrency("USD");
         request.setPhoneNo("1234567890");
-        request.setEmail("example@example.com");
-
-//        TicketMaster ticket = new TicketMaster();
-//        ticket.setTicketType(1);
-//        ticket.setJourneyTypeId(2);
-//        ticket.setSerialNumber("ABC123");
+        request.setEmail("younmemeaung@gmail.com");
+        request.setDeparturePoint(1);
+        request.setArrivalPoint(2);
+        request.setPaymentRefNo("test_payment");
+        request.setAmount(0L);
+        request.setCurrency("test_currency");
 
         ResponseEntity<APIResponse> response = controller.purchaseTicket(request);
         assertNotNull(response.getBody(), "Response body should return purchased ticket");
