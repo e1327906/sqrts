@@ -6,6 +6,8 @@ import com.qre.tg.query.api.controller.impl.TicketServiceControllerImpl;
 import com.qre.tg.query.api.service.impl.TicketServiceImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -37,7 +39,9 @@ public class PurchaseTicketControllerTest {
     void tearDown() {
     }
 
-    void testPurchaseTicket() throws Exception {
+    @Test
+    @Order(1)
+    void testPurchaseTicket_successfully() throws Exception {
         PurchaseTicketRequest request = new PurchaseTicketRequest();
         request.setJourneyType(2);
         request.setGroupSize(3);
@@ -49,21 +53,21 @@ public class PurchaseTicketControllerTest {
         request.setEmail("younmemeaung@gmail.com");
         request.setDeparturePoint(1);
         request.setArrivalPoint(2);
-        request.setPaymentRefNo("test_payment");
-        request.setAmount(0L);
-        request.setCurrency("test_currency");
 
         ResponseEntity<APIResponse> response = controller.purchaseTicket(request);
         assertNotNull(response.getBody(), "Response body should return purchased ticket");
         assertEquals( 200, response.getStatusCodeValue());
     }
 
+    @Test
+    @Order(2)
     void testGetTickets() throws Exception {
         ResponseEntity<APIResponse> response = controller.getTickets("younmemeaung@gmail.com");
         assertNotNull(response.getBody(), "Response body should return all tickets");
         assertEquals( 200, response.getStatusCodeValue());
     }
-
+    @Test
+    @Order(3)
     void testGetRefundTickets() throws Exception {
         ResponseEntity<APIResponse> response = controller.getRefundTickets("younmemeaung@gmail.com");
         assertNotNull(response.getBody(), "Response body should return all refund tickets");

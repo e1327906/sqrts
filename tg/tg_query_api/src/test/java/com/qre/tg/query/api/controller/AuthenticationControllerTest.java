@@ -14,6 +14,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
+import javax.mail.MessagingException;
+import java.io.IOException;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
@@ -35,7 +39,7 @@ class AuthenticationControllerTest {
     }
 
     @Test
-    void register_SuccessfulRegistration_ReturnsAccessTokenAndRefreshToken() {
+    void register_SuccessfulRegistration_ReturnsAccessTokenAndRefreshToken() throws MessagingException, IOException {
         // Given
         UserRequest request = UserRequest.builder()
                 .userName("zaw")
@@ -61,7 +65,7 @@ class AuthenticationControllerTest {
     }
 
     @Test
-    void register_InvalidRequest_ReturnsBadRequest() {
+    void register_InvalidRequest_ReturnsBadRequest() throws MessagingException, IOException {
 
         // Given
         UserRequest invalidRequest = UserRequest.builder().build();
@@ -78,7 +82,7 @@ class AuthenticationControllerTest {
     }
 
     @Test
-    void register_ServiceException_ReturnsInternalServerError() {
+    void register_ServiceException_ReturnsInternalServerError() throws MessagingException, IOException {
         // Given
         UserRequest request = UserRequest.builder()
                 .userName("zaw")
@@ -100,7 +104,7 @@ class AuthenticationControllerTest {
     }
 
     @Test
-    void register_NullResponse_ReturnsInternalServerError() {
+    void register_NullResponse_ReturnsInternalServerError() throws MessagingException, IOException {
         // Given
         UserRequest request = UserRequest.builder()
                 .userName("zaw")
