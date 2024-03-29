@@ -77,7 +77,7 @@ public class OtpServiceImpl implements OtpService {
      * @param key
      * @return
      */
-    private int getOtp(String key){
+    public int getOtp(String key){
         try{
             IMap<String, Integer> otpCache = hazelcastCacheService.getHazelcastIMap("otpCache");
             return otpCache.get(key);
@@ -90,7 +90,7 @@ public class OtpServiceImpl implements OtpService {
      * This method is used to clear the OTP catched already
      * @param key
      */
-    private void clearOTP(String key){
+    public void clearOTP(String key){
         IMap<String, Integer> otpCache = hazelcastCacheService.getHazelcastIMap("otpCache");
         otpCache.remove(key);
     }
