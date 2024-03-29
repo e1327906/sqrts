@@ -18,8 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-import static com.qre.tg.query.api.common.Constants.BASE_URL;
-
 @RestController
 @RequestMapping("/api/v1/routes")
 public class RouteControllerImpl implements RouteController {

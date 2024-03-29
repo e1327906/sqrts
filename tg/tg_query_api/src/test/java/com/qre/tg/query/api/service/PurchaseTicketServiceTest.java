@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.*;
@@ -53,11 +54,13 @@ public class PurchaseTicketServiceTest {
         request.setPaymentRefNo("test_payment");
         request.setAmount(0L);
         request.setCurrency("test_currency");
-
     }
+
     @Test
     void purchaseTicket_ReturnTicketMaster() throws Exception {
        TicketMaster ticketMaster = ticketService.purchaseTicket(request);
+       TicketMaster ticketMasterMock = Mockito.mock(TicketMaster.class);
+       when(ticketService.purchaseTicket(Mockito.any(PurchaseTicketRequest.class))).thenReturn(ticketMasterMock);
        Assertions.assertThat(ticketMaster).isNotNull();
     }
 
