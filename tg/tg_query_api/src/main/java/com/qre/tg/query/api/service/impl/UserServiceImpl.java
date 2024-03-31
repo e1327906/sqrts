@@ -34,10 +34,15 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
     @Override
-    public void changePassword(ChangePasswordRequest request, Principal connectedUser) {
+    public void changePassword(ChangePasswordRequest request) {
 
-        var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
+        var exitingUser = userRepository.findByEmail(request.getEmail());
 
+        if(exitingUser.isEmpty()){
+            throw new IllegalStateException("Invalid user");
+        }
+
+        var user  = exitingUser.get();
         // check if the current password is correct
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
             throw new IllegalStateException("Wrong password");

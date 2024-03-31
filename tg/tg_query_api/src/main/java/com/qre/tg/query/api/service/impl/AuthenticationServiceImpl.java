@@ -78,6 +78,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             .email(user.getEmail())
             .role(user.getRoles().stream().findFirst().get().getName().name())
             .userName(user.getUserName())
+            .phoneNumber(user.getPhoneNumber())
+            .userId(user.getId().toString())
             .build();
 
   }
@@ -101,6 +103,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             .email(user.getEmail())
             .role(user.getRoles().stream().findFirst().get().getName().name())
             .userName(user.getUserName())
+            .phoneNumber(user.getPhoneNumber())
+            .userId(user.getId().toString())
             .build();
   }
 
