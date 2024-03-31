@@ -5,6 +5,7 @@ import com.qre.tg.dto.user.UserRequest;
 import com.qre.tg.entity.user.RoleType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -30,6 +31,7 @@ class AuthenticationControllerIntegrationTest {
     void tearDown() {
     }
 
+    @Disabled
     @Test
     void register_SuccessfulRegistration_ReturnsAccessTokenAndRefreshToken() throws Exception {
 

@@ -27,4 +27,10 @@ public class AuthenticationResponse {
 
   @JsonProperty(JsonFieldName.ROLE)
   private String role;
+
+  @JsonProperty(JsonFieldName.PHONE_NUMBER)
+  private String phoneNumber;
+
+  @JsonProperty(JsonFieldName.USER_ID)
+  private String userId;
 }

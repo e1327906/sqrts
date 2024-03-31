@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface UserService extends UserDetailsService{
 
-    void changePassword(ChangePasswordRequest request, Principal connectedUser);
+    void changePassword(ChangePasswordRequest request);
 
     List<User> getAllUser();
 }
