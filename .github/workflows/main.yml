@@ -69,7 +69,7 @@ jobs:
       env:
         GIT_HUB_TOKEN: ${{ secrets.GIT_HUB_TOKEN }} # Needed to get PR information, if any
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=e1327906_sqrts -DskipTests
+      run: mvn -DskipTests -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=e1327906_sqrts
   snyk:
     needs: build
     runs-on: ubuntu-latest
