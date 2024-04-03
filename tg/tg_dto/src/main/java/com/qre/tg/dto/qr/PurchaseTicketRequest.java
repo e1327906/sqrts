@@ -1,6 +1,5 @@
 package com.qre.tg.dto.qr;
 
-import java.io.Serializable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qre.tg.dto.base.JsonFieldName;

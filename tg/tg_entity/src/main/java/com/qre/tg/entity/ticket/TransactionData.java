@@ -1,4 +1,5 @@
 package com.qre.tg.entity.ticket;
+
 import com.qre.tg.entity.base.DbFieldName;
 import lombok.*;
 

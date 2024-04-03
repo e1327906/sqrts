@@ -18,9 +18,9 @@ import java.util.UUID;
 @Entity
 @Table(name = DbFieldName.TICKET_MASTER,
         indexes = {
-                @Index(name="pno_email_idx",columnList = "serial_number,phone_no,email", unique = true),
-                @Index(name="payment_ref_no_idx",columnList = "payment_ref_no", unique = true)
-        })
+        @Index(name="pno_email_idx",columnList = "serial_number,phone_no,email", unique = true),
+        @Index(name="payment_ref_no_idx",columnList = "payment_ref_no", unique = true)
+})
 public class TicketMaster extends AbstractPersistableEntity<UUID> {
 
     @Id

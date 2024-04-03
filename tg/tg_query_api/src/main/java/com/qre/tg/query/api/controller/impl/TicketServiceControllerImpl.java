@@ -2,7 +2,6 @@ package com.qre.tg.query.api.controller.impl;
 
 import com.qre.tg.dto.base.APIResponse;
 import com.qre.tg.dto.qr.PurchaseTicketRequest;
-import com.qre.tg.entity.ticket.TicketMaster;
 import com.qre.tg.query.api.controller.TicketServiceController;
 import com.qre.tg.query.api.service.TicketService;
 import lombok.RequiredArgsConstructor;
@@ -20,11 +19,10 @@ public class TicketServiceControllerImpl implements TicketServiceController {
     @PostMapping("/PurchaseTicket")
     @Override
     public ResponseEntity<APIResponse> purchaseTicket(@RequestBody PurchaseTicketRequest request) throws Exception {
-        TicketMaster ticketMaster = ticketService.purchaseTicket(request);
+        ticketService.purchaseTicket(request);
         APIResponse apiResponse = APIResponse.builder()
                 .responseCode(String.valueOf(HttpStatus.OK))
                 .responseMsg(HttpStatus.OK.getReasonPhrase())
-                .responseData(ticketMaster)
                 .build();
         return ResponseEntity.ok(apiResponse);
     }

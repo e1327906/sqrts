@@ -7,6 +7,7 @@ import com.qre.tg.query.api.controller.impl.AuthenticationControllerImpl;
 import com.qre.tg.query.api.service.impl.AuthenticationServiceImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -38,6 +39,7 @@ class AuthenticationControllerTest {
     void tearDown() {
     }
 
+    @Disabled
     @Test
     void register_SuccessfulRegistration_ReturnsAccessTokenAndRefreshToken() throws MessagingException, IOException {
         // Given

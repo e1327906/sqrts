@@ -1,4 +1,5 @@
 package com.qre.tg.entity.ticket;
+
 import com.qre.tg.entity.base.DbFieldName;
 import lombok.*;
 
@@ -17,4 +18,3 @@ public class Security implements Serializable {
     @Column(name = DbFieldName.DIGITAL_SIGNATURE, columnDefinition = "text")
     private String digitalSignature;
 }
-

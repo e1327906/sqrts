@@ -1,4 +1,5 @@
 package com.qre.tg.dto.qr;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qre.tg.dto.base.JsonFieldName;
 import lombok.AllArgsConstructor;
@@ -12,7 +13,8 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ValidationRequest implements Serializable{
+public class ValidationRequest implements Serializable {
+
     @JsonProperty(JsonFieldName.QR_DATA)
     private String qrData;
 

@@ -1,4 +1,5 @@
 package com.qre.tg.dto.qr;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qre.tg.dto.base.JsonFieldName;
 import lombok.AllArgsConstructor;
@@ -49,4 +50,5 @@ public class TicketDetailResponse implements Serializable {
 
     @JsonProperty(JsonFieldName.AMOUNT)
     private Long amount;
+
 }

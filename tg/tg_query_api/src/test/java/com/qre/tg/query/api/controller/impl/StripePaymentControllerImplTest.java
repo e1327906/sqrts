@@ -9,6 +9,7 @@ import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
 import com.stripe.param.PaymentIntentCreateParams;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -181,6 +182,7 @@ public class StripePaymentControllerImplTest {
      * Test directly with stripe
      * @throws StripeException
      */
+    @Disabled
     @Test
     void processRefundTest_success() throws StripeException {
         // Mocking input payload

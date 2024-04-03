@@ -1,4 +1,5 @@
 package com.qre.tg.entity.ticket;
+
 import com.qre.tg.entity.base.AbstractPersistableEntity;
 import com.qre.tg.entity.base.DbFieldName;
 import lombok.*;
@@ -47,4 +48,3 @@ public class JourneyDetails extends AbstractPersistableEntity<UUID> {
         return journeyId;
     }
 }
-

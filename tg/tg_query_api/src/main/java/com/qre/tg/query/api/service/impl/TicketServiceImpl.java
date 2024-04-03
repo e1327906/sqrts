@@ -1,7 +1,5 @@
 package com.qre.tg.query.api.service.impl;
 
-import com.qre.tg.common.TicketStatusEnum;
-import com.qre.tg.query.api.service.TicketService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.zxing.BarcodeFormat;
@@ -24,13 +22,17 @@ import com.qre.tg.dto.qr.PurchaseTicketRequest;
 import com.qre.tg.dto.qr.TicketDetailResponse;
 import com.qre.tg.entity.route.Station;
 import com.qre.tg.entity.ticket.*;
-
+import com.qre.tg.query.api.common.JourneyTypeEnum;
+import com.qre.tg.query.api.common.TicketStatusEnum;
 import com.qre.tg.query.api.config.ApplicationProperties;
+import com.qre.tg.query.api.service.TicketService;
+import com.qre.tg.query.api.service.TrainRouteService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import com.qre.tg.common.JourneyTypeEnum;
+
+import javax.mail.MessagingException;
 import javax.transaction.Transactional;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -64,7 +66,7 @@ public class TicketServiceImpl implements TicketService {
     private final JourneyDetailsRepository journeyDetailsRepository;
 
     @Override
-    public TicketMaster purchaseTicket(PurchaseTicketRequest request) throws Exception {
+    public void purchaseTicket(PurchaseTicketRequest request) throws Exception {
 
         TicketMaster ticketMaster = TicketMaster.builder()
                 .ticketType(request.getTicketType())
@@ -118,8 +120,6 @@ public class TicketServiceImpl implements TicketService {
                 }
             });
         }
-
-        return newTicketData;
     }
 
 
@@ -193,7 +193,7 @@ public class TicketServiceImpl implements TicketService {
                 , applicationProperties.getPrivateKeyPath());
     }
 
-    public List<JourneyDetails> getJourneyDetails(PurchaseTicketRequest request) {
+    private List<JourneyDetails> getJourneyDetails(PurchaseTicketRequest request) {
 
         List<JourneyDetails> journeyDetailsList = new ArrayList<>();
 

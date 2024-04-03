@@ -5,6 +5,7 @@ import com.qre.tg.dto.qr.PurchaseTicketRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+
 public interface TicketServiceController {
 
     ResponseEntity<APIResponse> purchaseTicket(@RequestBody PurchaseTicketRequest purchaseTicketRequest) throws Exception;
