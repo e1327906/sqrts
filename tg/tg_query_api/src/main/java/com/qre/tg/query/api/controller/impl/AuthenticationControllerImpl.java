@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 import java.io.IOException;
 
 @RestController
@@ -27,11 +28,22 @@ public class AuthenticationControllerImpl {
     private final AuthenticationServiceImpl service;
 
     @PostMapping("/Register")
-    public ResponseEntity<AuthenticationResponse> register(
-            @RequestBody UserRequest userRequest
-    ) throws MessagingException, IOException {
-        return ResponseEntity.ok(service.register(userRequest));
+    public ResponseEntity<AuthenticationResponse> register(@Valid @RequestBody UserRequest userRequest) {
+
+        AuthenticationResponse response;
+        try {
+            response = service.register(userRequest);
+        } catch (IllegalArgumentException e) {
+            logger.error("Bad Request during user registration: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("Unexpected error during user registration", e);
+            return ResponseEntity.internalServerError().build();
+        }
+        return ResponseEntity.ok(response);
     }
+
     @PostMapping("/Authenticate")
     public ResponseEntity<AuthenticationResponse> authenticate(
             @RequestBody AuthenticationRequest request
