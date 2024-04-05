@@ -12,8 +12,10 @@ import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ResourceUtils;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -40,6 +42,10 @@ public class Crypto {
      * logger
      */
     private static final Logger logger = LoggerFactory.getLogger(Crypto.class);
+
+
+    @Autowired
+    ResourceLoader resourceLoader;
 
     /**
      *
@@ -308,7 +314,9 @@ public class Crypto {
      */
     public PrivateKey getPrivateKey(String keyFilePath) throws GeneralSecurityException, IOException {
         //byte[] keyDataBytes = Files.readAllBytes(Paths.get(keyFilePath));
-        byte[] keyDataBytes = Files.readAllBytes(ResourceUtils.getFile(keyFilePath).toPath());
+        Resource resource = resourceLoader.getResource(keyFilePath);
+        InputStream inputStream = resource.getInputStream();
+        byte[] keyDataBytes = inputStream.readAllBytes();
         String keyDataString = new String(keyDataBytes, StandardCharsets.UTF_8);
 
         if (keyDataString.contains(Constants.PKCS_1_PEM_HEADER)) {
@@ -482,7 +490,9 @@ public class Crypto {
      */
     public char[] getPurePrivateKey(String privateKeyFilePath) throws IOException {
         //String privateKeyPem = new String(Files.readAllBytes(new File(privateKeyFilePath).toPath()));
-        String privateKeyPem = new String(Files.readAllBytes(ResourceUtils.getFile(privateKeyFilePath).toPath()));
+        Resource resource = resourceLoader.getResource(privateKeyFilePath);
+        InputStream inputStream = resource.getInputStream();
+        String privateKeyPem = new String(inputStream.readAllBytes());
 
         privateKeyPem = privateKeyPem.replace(Constants.PEM_RSA_PRIVATE_START, "")
                 .replace(Constants.PEM_RSA_PRIVATE_END, "");
