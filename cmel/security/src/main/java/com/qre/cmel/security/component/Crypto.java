@@ -13,6 +13,7 @@ import org.bouncycastle.util.io.pem.PemWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ResourceUtils;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -479,7 +480,9 @@ public class Crypto {
      * @throws IOException
      */
     public char[] getPurePrivateKey(String privateKeyFilePath) throws IOException {
-        String privateKeyPem = new String(Files.readAllBytes(new File(privateKeyFilePath).toPath()));
+        //String privateKeyPem = new String(Files.readAllBytes(new File(privateKeyFilePath).toPath()));
+        String privateKeyPem = new String(Files.readAllBytes(ResourceUtils.getFile(privateKeyFilePath).toPath()));
+
         privateKeyPem = privateKeyPem.replace(Constants.PEM_RSA_PRIVATE_START, "")
                 .replace(Constants.PEM_RSA_PRIVATE_END, "");
         privateKeyPem = privateKeyPem.replaceAll("\r\n", "").replaceAll("\n", "");
