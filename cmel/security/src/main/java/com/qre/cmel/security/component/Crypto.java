@@ -307,7 +307,8 @@ public class Crypto {
      * @throws IOException
      */
     public PrivateKey getPrivateKey(String keyFilePath) throws GeneralSecurityException, IOException {
-        byte[] keyDataBytes = Files.readAllBytes(Paths.get(keyFilePath));
+        //byte[] keyDataBytes = Files.readAllBytes(Paths.get(keyFilePath));
+        byte[] keyDataBytes = Files.readAllBytes(ResourceUtils.getFile(keyFilePath).toPath());
         String keyDataString = new String(keyDataBytes, StandardCharsets.UTF_8);
 
         if (keyDataString.contains(Constants.PKCS_1_PEM_HEADER)) {
