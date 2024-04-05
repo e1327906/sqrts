@@ -30,3 +30,4 @@ public class Station extends AbstractPersistableEntity<Integer> {
         return stnId;
     }
 }
+
