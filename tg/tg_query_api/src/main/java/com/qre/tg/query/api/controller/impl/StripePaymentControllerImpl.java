@@ -2,8 +2,12 @@ package com.qre.tg.query.api.controller.impl;
 
 import com.qre.tg.dto.base.APIResponse;
 import com.qre.tg.dto.base.JsonFieldName;
+import com.qre.tg.entity.ticket.TicketMaster;
+import com.qre.tg.query.api.common.RefundPolicyTypeEnum;
 import com.qre.tg.query.api.controller.StripePaymentController;
+import com.qre.tg.query.api.service.RefundPolicyService;
 import com.qre.tg.query.api.service.TicketService;
+import com.qre.tg.query.api.service.impl.RefundPolicyServiceFactoryImpl;
 import com.stripe.Stripe;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.exception.StripeException;
@@ -18,10 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/v1/payments")
@@ -37,8 +38,12 @@ public class StripePaymentControllerImpl implements StripePaymentController {
 
     private final TicketService ticketService;
 
-    public StripePaymentControllerImpl(TicketService ticketService) {
+    private final RefundPolicyServiceFactoryImpl refundPolicyServiceFactoryImpl;
+
+    public StripePaymentControllerImpl(TicketService ticketService,
+                                       RefundPolicyServiceFactoryImpl refundPolicyServiceFactoryImpl) {
         this.ticketService = ticketService;
+        this.refundPolicyServiceFactoryImpl = refundPolicyServiceFactoryImpl;
     }
 
     @PostConstruct
@@ -424,9 +429,9 @@ public class StripePaymentControllerImpl implements StripePaymentController {
             String serialNumber = payLoad.get(JsonFieldName.SERIAL_NUMBER).toString();
             String paymentIntentId = payLoad.get(JsonFieldName.PAYMENT_INTENT_ID).toString();
             String amount = payLoad.get(JsonFieldName.AMOUNT).toString();
-            if (amount != null) {
+            /*if (amount != null) {
                 amount = amount;
-            }
+            }*/
             //Find charge from payment intent
             ChargeListParams chargeParams = ChargeListParams.builder()
                     .setPaymentIntent(paymentIntentId)
@@ -443,13 +448,15 @@ public class StripePaymentControllerImpl implements StripePaymentController {
                 return ResponseEntity.ok().body(apiResponse);
             }
             Charge data = charges.getData().get(0);
-            long amountL = 0L;
+
+
+           /* long amountL = 0L;
             if (amount.isEmpty()) {
                 //treat as full refund
                 amountL = data.getAmount();
             }
             else {
-                amountL = Long.parseLong(amount);
+                amountL = Long.parseLong(amount) * 100;
                 if (amountL > data.getAmount()) {
                     APIResponse apiResponse = APIResponse.builder()
                             .responseCode(String.valueOf(HttpStatus.BAD_REQUEST.value()))
@@ -458,13 +465,31 @@ public class StripePaymentControllerImpl implements StripePaymentController {
                             .build();
                     return ResponseEntity.ok().body(apiResponse);
                 }
+            }*/
+
+            Optional<TicketMaster>  ticketMaster = ticketService.findBySerialNumber(serialNumber);
+            if(ticketMaster.isEmpty()){
+                APIResponse apiResponse = APIResponse.builder()
+                        .responseCode(String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()))
+                        .responseMsg(HttpStatus.NOT_FOUND.getReasonPhrase())
+                        .responseData(null)
+                        .build();
+                return ResponseEntity.ok().body(apiResponse);
             }
+
+            // Create policy
+            RefundPolicyService refundPolicyService = refundPolicyServiceFactoryImpl.createRefundPolicy(RefundPolicyTypeEnum.PARTIAL_REFUND);
+            if(refundPolicyServiceFactoryImpl.hoursDifference(
+                    ticketMaster.get().getEffectiveDateTime()) <=24){
+                refundPolicyService = refundPolicyServiceFactoryImpl.createRefundPolicy(RefundPolicyTypeEnum.FULL_REFUND);
+            }
+            long refundAmount = refundPolicyService.calculateRefund(ticketMaster.get());
 
             //amount integer, charge string, payment_intent string, reason string
             RefundCreateParams refundParams =
                     RefundCreateParams.builder()
                             .setCharge(data.getId())
-                            .setAmount(amountL)
+                            .setAmount(refundAmount)
                             .setReason(RefundCreateParams.Reason.REQUESTED_BY_CUSTOMER)
                             .build();
             Refund refundResponse = Refund.create(refundParams);

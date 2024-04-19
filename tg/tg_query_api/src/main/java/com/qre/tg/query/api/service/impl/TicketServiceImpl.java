@@ -65,6 +65,8 @@ public class TicketServiceImpl implements TicketService {
 
     private final JourneyDetailsRepository journeyDetailsRepository;
 
+    private final TripFareServiceFactoryImpl tripFareServiceFactory;
+
     @Override
     public void purchaseTicket(PurchaseTicketRequest request) throws Exception {
 
@@ -86,7 +88,8 @@ public class TicketServiceImpl implements TicketService {
                 .transactionData(TransactionData.builder()
                         .paymentRefNo(request.getPaymentRefNo())
                         .currency(request.getCurrency())
-                        .amount(request.getAmount())
+                        .amount(calculateTripFare(new Date(request.getStartDatetime()),
+                                request.getAmount()))
                         .build())
                 .journeyDetails(getJourneyDetails(request))
                 .additionalInfo(AdditionalInfo.builder().build())
@@ -122,6 +125,11 @@ public class TicketServiceImpl implements TicketService {
         }
     }
 
+    private long calculateTripFare(Date effectiveDateTime, long amount){
+        boolean isHoliday = tripFareServiceFactory.isHoliday(effectiveDateTime);
+        return tripFareServiceFactory.createTripFare(isHoliday)
+                .calculateTripFare(amount);
+    }
 
     @Override
     public List<TicketDetailResponse> findAllByEmail(String email) {
@@ -322,5 +330,15 @@ public class TicketServiceImpl implements TicketService {
             throw new IllegalArgumentException("Invalid ticket status");
         }
         journeyDetailsRepository.save(journeyDetails);
+    }
+
+    @Override
+    public Optional<TicketMaster> findBySerialNumber(String serialNumber) {
+        Optional<TicketMaster> ticketMasterOpt = ticketMasterRepository.findAllBySerialNumber(serialNumber);
+        if (ticketMasterOpt.isEmpty()) {
+            throw new NullPointerException("Invalid ticket[" + serialNumber + "]");
+        }
+
+        return Optional.of(ticketMasterOpt.get());
     }
 }

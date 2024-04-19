@@ -20,4 +20,6 @@ public interface TicketService{
     Optional<TicketMaster> findByTransactionDataPaymentRefNo(String paymentRefNo);
 
     void updateRefund(String serialNumber);
+
+    Optional<TicketMaster> findBySerialNumber(String serialNumber);
 }
