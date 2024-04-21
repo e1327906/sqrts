@@ -24,7 +24,8 @@ public class PartialRefundPolicyServiceImpl implements RefundPolicyService {
         else {
             refundPercentage = 0;
         }
-        return (ticketMaster.getTransactionData().getAmount() *100) * refundPercentage / 100;
+        return (ticketMaster.getTransactionData().getAmount() *100) -
+                ((ticketMaster.getTransactionData().getAmount() *100) * refundPercentage / 100);
     }
 
     public long hoursDifference(Date effectiveDateTime) {

@@ -36,6 +36,7 @@ import javax.mail.MessagingException;
 import javax.transaction.Transactional;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -65,7 +66,14 @@ public class TicketServiceImpl implements TicketService {
 
     private final JourneyDetailsRepository journeyDetailsRepository;
 
-    private final TripFareServiceFactoryImpl tripFareServiceFactory;
+    String template = "Dear Customer,\n" +
+            "We are pleased to confirm that your train ticket purchase for the journey on %s has been successfully processed. " +
+            "Thank you for choosing our services for your travel needs. Below are the details of your booking:\n" +
+            "Departure Station: %s\n" +
+            "Arrival Station: %s\n" +
+            "Departure Time: %s\n" +
+            "Arrival Time: %s\n" +
+            "Ticket Price: %s";
 
     @Override
     public void purchaseTicket(PurchaseTicketRequest request) throws Exception {
@@ -88,8 +96,7 @@ public class TicketServiceImpl implements TicketService {
                 .transactionData(TransactionData.builder()
                         .paymentRefNo(request.getPaymentRefNo())
                         .currency(request.getCurrency())
-                        .amount(calculateTripFare(new Date(request.getStartDatetime()),
-                                request.getAmount()))
+                        .amount(request.getAmount())
                         .build())
                 .journeyDetails(getJourneyDetails(request))
                 .additionalInfo(AdditionalInfo.builder().build())
@@ -104,14 +111,35 @@ public class TicketServiceImpl implements TicketService {
 
         if (!request.getEmail().isEmpty()) {
 
+            List<Station> stations = trainRouteRepository.findAll();
+
             // To generate QR code file using qr data
             CompletableFuture.runAsync(() -> {
                 try {
                     String qrData = newTicketData.getSecurity().getDigitalSignature() +
                             "#" + Base64.getEncoder().encodeToString(newTicketData.getQrData());
+
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+
+                    String formattedString = String.format(template,
+                            dateFormat.format(request.getCreationDatetime()),
+                            stations.stream()
+                                    .filter(stn -> stn.getStnId() == request.getDeparturePoint())
+                                    .findAny()
+                                    .orElse(null)
+                                    .getStnFullName(),
+                            stations.stream()
+                                    .filter(stn -> stn.getStnId() == request.getArrivalPoint())
+                                    .findAny()
+                                    .orElse(null)
+                                    .getStnFullName(),
+                            dateFormat.format(request.getStartDatetime()),
+                            dateFormat.format(request.getEndDatetime()),
+                            "$".concat(String.valueOf(request.getAmount())));
+
                     MessageDto messageDto = MessageDto.builder()
-                            .message("QR Ticketing System")
-                            .subject("Ticket Purchase Successful")
+                            .message(formattedString)
+                            .subject("QR Ticket Confirmation")
                             .to(request.getEmail())
                             .imageBytes(generateQRCodeImageBytes(qrData, 250, 250))
                             .fileNameWithExtension(newTicketData.getSerialNumber().concat(".png"))
@@ -125,11 +153,7 @@ public class TicketServiceImpl implements TicketService {
         }
     }
 
-    private long calculateTripFare(Date effectiveDateTime, long amount){
-        boolean isHoliday = tripFareServiceFactory.isHoliday(effectiveDateTime);
-        return tripFareServiceFactory.createTripFare(isHoliday)
-                .calculateTripFare(amount);
-    }
+
 
     @Override
     public List<TicketDetailResponse> findAllByEmail(String email) {

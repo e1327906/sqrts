@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
 import java.util.List;
 
 @Transactional
@@ -20,6 +21,8 @@ import java.util.List;
 public class BusFareServiceImpl implements BusFareService {
 
     private final BusFareMatrixRepository busFareMatrixRepository;
+
+    private final TripFareServiceFactoryImpl tripFareServiceFactory;
 
     @Override
     public FareResponse findFare(BusFareRequest request) {
@@ -57,8 +60,14 @@ public class BusFareServiceImpl implements BusFareService {
         totalFare *= request.getGroupSize();
 
         return FareResponse.builder()
-                .fare(totalFare)
+                .fare(calculateTripFare(totalFare))
                 .build();
+    }
+
+    private long calculateTripFare(long amount){
+        boolean isHoliday = tripFareServiceFactory.isHoliday(new Date());
+        return tripFareServiceFactory.createTripFare(isHoliday)
+                .calculateTripFare(amount);
     }
 
     @Override

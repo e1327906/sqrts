@@ -9,8 +9,9 @@ public class FullRefundPolicyServiceImpl implements RefundPolicyService {
     @Override
     public long calculateRefund(TicketMaster ticketMaster) {
 
-        long refundPercentage = 3; //Service charges 3 percentage
+        long refundPercentage = 6; //Service charges 3 percentage
         // Full refund policy implementation
-        return (ticketMaster.getTransactionData().getAmount() *100) * refundPercentage / 100;
+        return ((ticketMaster.getTransactionData().getAmount() *100))
+                - ((ticketMaster.getTransactionData().getAmount() *100) * refundPercentage / 100);
     }
 }
