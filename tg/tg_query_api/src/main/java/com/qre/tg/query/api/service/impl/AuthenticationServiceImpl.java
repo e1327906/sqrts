@@ -30,6 +30,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 @Transactional
 @Service
@@ -70,7 +71,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     var jwtToken = jwtService.generateToken(user);
     var refreshToken = jwtService.generateRefreshToken(user);
     saveUserToken(savedUser, jwtToken);
-    sendEmailOTP(userRequest);
+
+    CompletableFuture.runAsync(() -> {
+      try {
+        sendEmailOTP(userRequest);
+      } catch (MessagingException e) {
+        e.printStackTrace();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    });
 
     return AuthenticationResponse.builder()
             .accessToken(jwtToken)
