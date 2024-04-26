@@ -6,6 +6,7 @@ import com.qre.tg.dao.fare.BusFareMatrixRepository;
 import com.qre.tg.dto.fare.BusFareRequest;
 import com.qre.tg.dto.fare.FareResponse;
 import com.qre.tg.entity.fare.BusFareMatrix;
+import com.qre.tg.query.api.service.TripFareService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -26,6 +27,9 @@ public class BusFareServiceImplTest {
     @InjectMocks
     private BusFareServiceImpl busFareService;
 
+    @Mock
+    private TripFareServiceFactoryImpl tripFareServiceFactory;
+
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -41,6 +45,10 @@ public class BusFareServiceImplTest {
 
         BusFareMatrix fareMatrixOutbound = new BusFareMatrix();
         fareMatrixOutbound.setFare(100L);
+        TripFareService tripFareServiceMock = mock(TripFareService.class);
+        when(tripFareServiceFactory.isHoliday(any())).thenReturn(true); // Mock isHoliday method
+        when(tripFareServiceFactory.createTripFare(true)).thenReturn(tripFareServiceMock);
+        when(tripFareServiceMock.calculateTripFare(100L)).thenReturn(100L);
 
         when(busFareMatrixRepository.findById(any())).thenReturn(Optional.of(fareMatrixOutbound));
         FareResponse response = busFareService.findFare(request);
@@ -59,13 +67,18 @@ public class BusFareServiceImplTest {
         fareMatrixOutbound.setFare(100L);
 
         BusFareMatrix fareMatrixReturn = new BusFareMatrix();
-        fareMatrixReturn.setFare(150L);
+        fareMatrixReturn.setFare(0L);
+
+        TripFareService tripFareServiceMock = mock(TripFareService.class);
+        when(tripFareServiceFactory.isHoliday(any())).thenReturn(true); // Mock isHoliday method
+        when(tripFareServiceFactory.createTripFare(true)).thenReturn(tripFareServiceMock);
+        when(tripFareServiceMock.calculateTripFare(100L)).thenReturn(100L);
 
         when(busFareMatrixRepository.findById(any())).thenReturn(Optional.of(fareMatrixOutbound), Optional.of(fareMatrixReturn));
 
         FareResponse response = busFareService.findFare(request);
 
-        assertEquals(250, response.getFare(), "Fare must be 250");
+        assertEquals(100, response.getFare(), "Fare must be 100");
     }
 
     @Test

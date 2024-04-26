@@ -76,7 +76,7 @@ class AuthenticationServiceTest {
         // Given
         UserRequest userRequest = UserRequest.builder()
                 .userName("zaw")
-                .email("zaw@gmail.com")
+                .email("zawadmin@gmail.com")
                 .phoneNumber("1122334455")
                 .password("zaw")
                 .role(RoleType.ROLE_USER.name())
@@ -118,7 +118,7 @@ class AuthenticationServiceTest {
         // Given
         UserRequest userRequest = UserRequest.builder()
                 .userName("zaw")
-                .email("zaw@gmail.com")
+                .email("zawadmin@gmail.com")
                 .phoneNumber("1122334455")
                 .password("zaw")
                 .role(RoleType.ROLE_USER.name())
