@@ -195,7 +195,7 @@ public class TicketServiceImpl implements TicketService {
                 .collect(Collectors.toList());
     }
 
-    private Map<String, Object> prepareTicketJsonData(TicketMaster ticketMaster) throws JsonProcessingException {
+    protected Map<String, Object> prepareTicketJsonData(TicketMaster ticketMaster) throws JsonProcessingException {
 
         Map<String, Object> ticket = new HashMap<>();
         Map<String, Object> ticketDetail = new HashMap<>();
@@ -216,7 +216,7 @@ public class TicketServiceImpl implements TicketService {
         return ticket;
     }
 
-    private byte[] prepareQRData(Map<String, Object> ticketJsonData) throws Exception {
+    protected byte[] prepareQRData(Map<String, Object> ticketJsonData) throws Exception {
 
         String jsonData  = new ObjectMapper().writeValueAsString(ticketJsonData);
         logger.info("TicketServiceImpl.prepareQRData ticketJsonData : {}", jsonData);
@@ -225,7 +225,7 @@ public class TicketServiceImpl implements TicketService {
                 , applicationProperties.getPrivateKeyPath());
     }
 
-    private List<JourneyDetails> getJourneyDetails(PurchaseTicketRequest request) {
+    protected List<JourneyDetails> getJourneyDetails(PurchaseTicketRequest request) {
 
         List<JourneyDetails> journeyDetailsList = new ArrayList<>();
 
@@ -295,7 +295,7 @@ public class TicketServiceImpl implements TicketService {
      * @param endDate
      * @return
      */
-    private int getValidityPeriod(Date startDate, Date endDate) {
+    protected int getValidityPeriod(Date startDate, Date endDate) {
 
         // Calculate validity period in milliseconds
         long validityPeriodMillis = endDate.getTime() - startDate.getTime();
@@ -305,7 +305,7 @@ public class TicketServiceImpl implements TicketService {
         return (int) validityPeriodDays;
     }
 
-    private String generateDigitalSignature(Map<String, Object> ticket) throws Exception {
+    protected String generateDigitalSignature(Map<String, Object> ticket) throws Exception {
 
         String jsonString = new ObjectMapper().writeValueAsString(ticket);
         byte[] signData = digitalSignature.signingL2(jsonString,
