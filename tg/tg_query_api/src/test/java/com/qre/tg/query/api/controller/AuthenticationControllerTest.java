@@ -39,7 +39,58 @@ class AuthenticationControllerTest {
     void tearDown() {
     }
 
-    @Disabled
+    @Test
+    void register_Operator_SuccessfulRegistration_ReturnsAccessTokenAndRefreshToken() throws MessagingException, IOException {
+        // Given
+        UserRequest request = UserRequest.builder()
+                .userName("zaw")
+                .email("zawoperator@gmail.com")
+                .phoneNumber("3355667799")
+                .password("P@ssw0rd123")
+                .role(RoleType.ROLE_OPERATOR.name())
+                .build();
+        AuthenticationResponse mockResponse = AuthenticationResponse.builder()
+                .accessToken("mockAccessToken")
+                .refreshToken("mockRefreshToken")
+                .build();
+
+        when(service.register(request)).thenReturn(mockResponse);
+
+        // When
+        ResponseEntity<AuthenticationResponse> response = controller.register(request);
+
+        // Then
+        assertNotNull(response.getBody(), "Response body should not be null");
+        assertNotEquals("", response.getBody().getAccessToken(), "Access token should not be empty");
+        assertNotEquals("", response.getBody().getRefreshToken(), "Refresh token should not be empty");
+    }
+
+    @Test
+    void register_Admin_SuccessfulRegistration_ReturnsAccessTokenAndRefreshToken() throws MessagingException, IOException {
+        // Given
+        UserRequest request = UserRequest.builder()
+                .userName("zaw")
+                .email("zawadmin@gmail.com")
+                .phoneNumber("3355667788")
+                .password("P@ssw0rd123")
+                .role(RoleType.ROLE_ADMIN.name())
+                .build();
+        AuthenticationResponse mockResponse = AuthenticationResponse.builder()
+                .accessToken("mockAccessToken")
+                .refreshToken("mockRefreshToken")
+                .build();
+
+        when(service.register(request)).thenReturn(mockResponse);
+
+        // When
+        ResponseEntity<AuthenticationResponse> response = controller.register(request);
+
+        // Then
+        assertNotNull(response.getBody(), "Response body should not be null");
+        assertNotEquals("", response.getBody().getAccessToken(), "Access token should not be empty");
+        assertNotEquals("", response.getBody().getRefreshToken(), "Refresh token should not be empty");
+    }
+
     @Test
     void register_SuccessfulRegistration_ReturnsAccessTokenAndRefreshToken() throws MessagingException, IOException {
         // Given
@@ -73,10 +124,8 @@ class AuthenticationControllerTest {
         UserRequest invalidRequest = UserRequest.builder().build();
         when(service.register(invalidRequest)).thenThrow(IllegalArgumentException.class);
 
-
         // When
         ResponseEntity<AuthenticationResponse> response = controller.register(invalidRequest);
-
 
         // Then
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode(), "Should return HTTP Bad Request");
@@ -95,12 +144,10 @@ class AuthenticationControllerTest {
                 .build();
 
         when(service.register(request)).thenThrow(RuntimeException.class);
-
         // When
         ResponseEntity<AuthenticationResponse> response = controller.register(request);
 
         // Then
-
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode(), "Should return HTTP Internal Server Error");
         assertNull(response.getBody(), "Response body should be null for service exceptions");
     }
