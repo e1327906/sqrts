@@ -1,7 +1,7 @@
 package com.qre.tg.query.api.controller.impl;
 
 import com.qre.tg.dto.base.APIResponse;
-import com.qre.tg.entity.feedback.Feedback;
+import com.qre.tg.dto.feedback.Feedback;
 import com.qre.tg.query.api.controller.FeedbackController;
 import com.qre.tg.query.api.service.FeedbackService;
 import lombok.RequiredArgsConstructor;

@@ -3,11 +3,10 @@ package com.qre.tg.query.api.service.impl;
 import com.qre.cmel.ecommsvcs.sdk.dto.MessageDto;
 import com.qre.cmel.ecommsvcs.sdk.service.ECommSvcService;
 import com.qre.tg.dao.feedback.FeedbackRepository;
-import com.qre.tg.entity.feedback.Feedback;
+import com.qre.tg.dto.feedback.Feedback;
+import com.qre.tg.entity.feedback.FeedbackPK;
 import com.qre.tg.query.api.service.FeedbackService;
 import com.qre.tg.query.api.service.strategy.FeedbackStrategy;
-import lombok.Getter;
-import lombok.Setter;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,11 +29,17 @@ public class FeedbackServiceImpl implements FeedbackService {
 
     @Override
     public boolean processFeedback(Feedback feedback) {
+        FeedbackPK feedbackPK = FeedbackPK.builder()
+                .name(feedback.getName())
+                .email(feedback.getEmail())
+                .category(feedback.getCategory())
+                .message(feedback.getMessage())
+                .build();
         System.out.println("Feedback submitted by " + feedback.getName() + ": " + feedback.getMessage());
-        feedbackRepository.save(feedback);
-        FeedbackStrategy strategy = strategies.getOrDefault(feedback.getCategory().toLowerCase(), strategies.get("general"));
+        feedbackRepository.save(feedbackPK);
+        FeedbackStrategy strategy = strategies.get(feedback.getCategory().toLowerCase());
         System.out.println(strategy);
-        String emailBody = strategy.generateAcknowledgment(feedback);
+        String emailBody = strategy.generateAcknowledgment(feedbackPK);
         CompletableFuture.runAsync(() -> {
             try {
                 MessageDto messageDto = MessageDto

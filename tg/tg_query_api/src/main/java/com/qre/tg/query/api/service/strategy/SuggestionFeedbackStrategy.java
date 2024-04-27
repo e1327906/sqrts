@@ -1,6 +1,6 @@
 package com.qre.tg.query.api.service.strategy;
 
-import com.qre.tg.entity.feedback.Feedback;
+import com.qre.tg.entity.feedback.FeedbackPK;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -12,7 +12,7 @@ public class SuggestionFeedbackStrategy implements FeedbackStrategy {
     }
 
     @Override
-    public String generateAcknowledgment(Feedback feedback) {
+    public String generateAcknowledgment(FeedbackPK feedback) {
         return String.format("""
                 Dear %s,
                 \nWe want to express our gratitude for your valuable suggestion. Your suggestions plays a crucial role in guiding our development efforts.
