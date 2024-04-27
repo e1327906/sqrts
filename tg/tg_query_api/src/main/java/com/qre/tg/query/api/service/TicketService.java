@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public interface TicketService{
 
-    void purchaseTicket(PurchaseTicketRequest request) throws Exception;
+    TicketDetailResponse purchaseTicket(PurchaseTicketRequest request) throws Exception;
 
     List<TicketDetailResponse> findAllByEmail(String email);
 

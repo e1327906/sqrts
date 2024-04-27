@@ -41,7 +41,8 @@ public class SecurityConfiguration {
             "/api/v1/otp/**",
             "/api/v1/routes/**",
             "/api/v1/validator/**",
-            "/api/v1/users/**"
+            "/api/v1/users/**",
+            "/api/v1/general/**"
     };
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
