@@ -26,13 +26,11 @@ import com.qre.tg.query.api.common.JourneyTypeEnum;
 import com.qre.tg.query.api.common.TicketStatusEnum;
 import com.qre.tg.query.api.config.ApplicationProperties;
 import com.qre.tg.query.api.service.TicketService;
-import com.qre.tg.query.api.service.TrainRouteService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import javax.mail.MessagingException;
 import javax.transaction.Transactional;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -76,7 +74,7 @@ public class TicketServiceImpl implements TicketService {
             "Ticket Price: %s";
 
     @Override
-    public void purchaseTicket(PurchaseTicketRequest request) throws Exception {
+    public TicketDetailResponse purchaseTicket(PurchaseTicketRequest request) throws Exception {
 
         TicketMaster ticketMaster = TicketMaster.builder()
                 .ticketType(request.getTicketType())
@@ -151,8 +149,19 @@ public class TicketServiceImpl implements TicketService {
                 }
             });
         }
-    }
 
+        TicketDetailResponse ticketDetailResponse = TicketDetailResponse.builder()
+                .qrData(newTicketData.getQrData().toString())
+                .serialNumber(newTicketData.getSerialNumber())
+                .departurePoint(request.getDeparturePoint())
+                .arrivalPoint(request.getArrivalPoint())
+                .status(TicketStatusEnum.ACTIVE.getValue())
+                .effectiveDatetime(newTicketData.getEffectiveDateTime().getTime())
+                .journeyType(request.getJourneyType())
+                .journeyId(String.valueOf(newTicketData.getJourneyTypeId()))
+                .build();
+        return ticketDetailResponse;
+    }
 
 
     @Override

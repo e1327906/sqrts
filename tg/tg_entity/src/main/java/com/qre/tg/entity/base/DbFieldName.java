@@ -106,4 +106,9 @@ public class DbFieldName {
     public static final String QR_DATA = "qr_data";
     public static final String JOURNEY_TYPES = "journey_types";
     public static final String JOURNEY_TYPE = "journey_type";
+
+    public static final String FEEDBACK_TABLE = "feedback";
+    public static final String CATEGORY = "category";
+    public static final String MESSAGE = "message";
+    public static final String FEEDBACK_ID = "id";
 }
