@@ -1,9 +1,6 @@
 package com.qre.tg.query.api.service.impl;
 
-import com.qre.cmel.exception.ExceptionMsg;
 import com.qre.tg.dao.ticket.TicketMasterRepository;
-import com.qre.tg.dao.user.RoleRepository;
-import com.qre.tg.dao.user.UserRepository;
 import com.qre.tg.dto.auth.AuthenticationRequest;
 import com.qre.tg.dto.auth.AuthenticationResponse;
 import com.qre.tg.dto.qr.PurchaseTicketRequest;
@@ -11,20 +8,12 @@ import com.qre.tg.dto.qr.TicketDetailResponse;
 import com.qre.tg.dto.user.UserRequest;
 import com.qre.tg.entity.ticket.*;
 import com.qre.tg.entity.user.RoleType;
-import com.qre.tg.query.api.common.TicketStatusEnum;
-import com.qre.tg.query.api.config.ApplicationProperties;
-import com.qre.tg.query.api.config.JwtService;
 import com.qre.tg.query.api.controller.impl.AuthenticationControllerImpl;
-import com.qre.tg.query.api.controller.impl.TicketServiceControllerImpl;
 
-
-import org.aspectj.lang.annotation.Before;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.io.IOException;
 import java.util.*;
@@ -41,9 +30,6 @@ class TicketServiceImplTest {
     @Mock
     private TicketServiceImpl ticketService;
 
-    @InjectMocks
-    private TicketServiceControllerImpl ticketServiceController;
-
     @Mock
     private AuthenticationServiceImpl authService;
 
@@ -52,27 +38,14 @@ class TicketServiceImplTest {
 
     @Mock
     private TicketMasterRepository ticketMasterRepository;
-    
-    @Mock
-    private JwtService jwtService;
-
-    @Mock
-    private ApplicationProperties applicationProperties;
-
-    @Mock
-    private UserRepository userRepository;
-
-    @Mock
-    private RoleRepository roleRepository;
-
-    @Mock
-    private PasswordEncoder passwordEncoder;
 
     private PurchaseTicketRequest purchaseTicketRequest;
 
     private TicketMaster ticketMaster;
 
     private Long currentTime = new Date().getTime();
+    private List<TicketDetailResponse> ticketDetailsList = new ArrayList<>();
+
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -93,7 +66,7 @@ class TicketServiceImplTest {
         TicketMaster ticketMaster = TicketMaster.builder()
                 .ticketType(purchaseTicketRequest.getTicketType())
                 .journeyTypeId(purchaseTicketRequest.getJourneyType())
-                .serialNumber(ticketService.generateSerialNumber(purchaseTicketRequest))
+                .serialNumber("")
                 .issuerId(10)
                 .creatorId(5) //tg_id
                 .groupSize(purchaseTicketRequest.getGroupSize())
@@ -110,6 +83,7 @@ class TicketServiceImplTest {
                         .build())
                 .journeyDetails(ticketService.getJourneyDetails(purchaseTicketRequest))
                 .additionalInfo(AdditionalInfo.builder().build())
+                .security(mock(Security.class))
                 .build();
         ticketMaster.setCreatedDatetime(new Date());
         this.ticketMaster =ticketMaster;
@@ -149,9 +123,6 @@ class TicketServiceImplTest {
     @Test
     public void testGuestUserCanPurchaseTicketSuccessful() throws Exception{
         Map<String, Object> ticketJsonData = ticketService.prepareTicketJsonData(ticketMaster);
-        ticketMaster.setSecurity(Security.builder()
-                .digitalSignature(ticketService.generateDigitalSignature(ticketJsonData))
-                .build());
         ticketMaster.setQrData(ticketService.prepareQRData(ticketJsonData));
         ticketMaster.setEmail("guest@email.com");
         ticketMaster.setPhoneNo(null);
@@ -163,9 +134,6 @@ class TicketServiceImplTest {
     public void testRegiestedUserCanPurchaseTicketSuccessful() throws Exception{
         UserRequest registedUser =  authicateUser();
         Map<String, Object> ticketJsonData = ticketService.prepareTicketJsonData(ticketMaster);
-        ticketMaster.setSecurity(Security.builder()
-                .digitalSignature(ticketService.generateDigitalSignature(ticketJsonData))
-                .build());
         ticketMaster.setQrData(ticketService.prepareQRData(ticketJsonData));
         ticketMaster.setEmail(registedUser.getEmail());
         ticketMaster.setPhoneNo(registedUser.getPhoneNumber());
@@ -173,53 +141,70 @@ class TicketServiceImplTest {
         assertNotNull(ticketMaster);
     }
 
-//     @Test
-//     void testFindAllByEmail_ReturnTicketList() throws Exception {
-//         UserRequest registedUser =  authicateUser();
-//         purchaseTicketRequest.setEmail(registedUser.getEmail());
+     @Test
+     void testFindAllByEmail_ReturnTicketList() throws Exception {
 
-//         List<JourneyDetails> journeyDetailsList = new ArrayList<>();
+         TicketDetailResponse res = TicketDetailResponse.builder()
+                .serialNumber(ticketMaster.getSerialNumber())
+                .qrData("")
+                .effectiveDatetime(ticketMaster.getEffectiveDateTime().getTime())
+                .journeyType(ticketMaster.getJourneyTypeId())
+                .departurePoint(123)
+                .arrivalPoint(456)
+                .status(1)
+                .arrivalPointDes("AA")
+                .paymentRefNo(ticketMaster.getTransactionData().getPaymentRefNo())
+                .amount(ticketMaster.getTransactionData().getAmount())
+                .departurePointDes("")
+                .build();
+        ticketDetailsList.add(res);
 
-//         JourneyDetails journeyDetails = JourneyDetails.builder()
-//                 .departurePoint(purchaseTicketRequest.getDeparturePoint())
-//                 .arrivalPoint(purchaseTicketRequest.getArrivalPoint())
-//                 .status(TicketStatusEnum.ACTIVE.getValue())
-//                 .build();
-//         journeyDetails.setCreatedDatetime(new Date());
-//         journeyDetailsList.add(journeyDetails);
+        when(ticketService.findAllByEmail(authicateUser().getEmail())).thenReturn(ticketDetailsList);
 
+         assertNotNull(ticketDetailsList);
+         assertNotEquals(ticketDetailsList.size(),0);
+         assertEquals(ticketDetailsList.size(),1);
+     }
 
-//         Map<String, Object> ticketJsonData = ticketService.prepareTicketJsonData(ticketMaster);
-//         ticketMaster.setSecurity(Security.builder()
-//                 .digitalSignature(ticketService.generateDigitalSignature(ticketJsonData))
-//                 .build());
-//         ticketMaster.setQrData(ticketService.prepareQRData(ticketJsonData));
-//         ticketMaster.setEmail(registedUser.getEmail());
-//         ticketMaster.setPhoneNo(registedUser.getPhoneNumber());
-//         ticketMaster.setJourneyDetails(journeyDetailsList);
-//         System.out.println(journeyDetailsList);
+    @Test
+    void testGetJourneyDetail_ReturnJourneyDetailList() throws Exception {
+        Map<String, Object> ticketJsonData = ticketService.prepareTicketJsonData(ticketMaster);
+        ticketMaster.setQrData(ticketService.prepareQRData(ticketJsonData));
+        ticketMaster.setEmail(authicateUser().getEmail());
+        ticketMaster.setPhoneNo(authicateUser().getPhoneNumber());
+        when(ticketMasterRepository.save(any(TicketMaster.class))).thenReturn(ticketMaster);
 
+        TicketDetailResponse res = TicketDetailResponse.builder()
+                .serialNumber(ticketMaster.getSerialNumber())
+                .qrData("")
+                .effectiveDatetime(ticketMaster.getEffectiveDateTime().getTime())
+                .journeyType(ticketMaster.getJourneyTypeId())
+                .departurePoint(123)
+                .arrivalPoint(456)
+                .status(1)
+                .arrivalPointDes("AA")
+                .paymentRefNo(ticketMaster.getTransactionData().getPaymentRefNo())
+                .amount(ticketMaster.getTransactionData().getAmount())
+                .departurePointDes("")
+                .build();
+        ticketDetailsList.add(res);
 
-//         when(ticketMasterRepository.save(any(TicketMaster.class))).thenReturn(ticketMaster);
-//         System.out.println(ticketMaster);
+        when(ticketService.findAllRefundableTicketByEmail(authicateUser().getEmail())).thenReturn(ticketDetailsList);
+        assertNotNull(ticketDetailsList);
+        assertNotEquals(ticketDetailsList.size(),0);
+        assertEquals(ticketDetailsList.size(),1);
+    }
 
-//         List<TicketDetailResponse> ticketList = ticketService.findAllByEmail(registedUser.getEmail());
-//         System.out.println(ticketList);
+    @Test
+    void testGenerateSerialNumber() throws Exception {
+        String sno = ticketMaster.getSerialNumber();
+        when(ticketService.generateSerialNumber(purchaseTicketRequest)).thenReturn(sno);
+        assertNotNull(sno);
+    }
 
-// //        Assertions.assertThat(ticketList).isNotNull();
-// //        Assertions.assertThat(ticketList).hasSizeGreaterThan(0);
-//     }
-
-//    @Test
-//    void getJourneyDetail_ReturnJourneyDetailList() {
-//        List<JourneyDetails> journeyDetailsList = ticketService.getJourneyDetails(request);
-//        Assertions.assertThat(journeyDetailsList).isNotNull();
-//        Assertions.assertThat(journeyDetailsList).hasSizeGreaterThan(0);
-//    }
-
-
-  
-   
-
-    // Add more test cases as needed
+    @Test
+    void testfindByTransactionDataPaymentRefNo() throws Exception {
+        when(ticketService.findByTransactionDataPaymentRefNo(purchaseTicketRequest.getPaymentRefNo())).thenReturn(Optional.of(ticketMaster));
+        assertNotNull(ticketMaster.getTransactionData());
+    }
 }
