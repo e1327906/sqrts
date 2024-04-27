@@ -29,13 +29,17 @@ public class FeedbackServiceImpl implements FeedbackService {
 
     @Override
     public boolean processFeedback(Feedback feedback) {
+        if (feedback == null || feedback.getName() == null || feedback.getEmail() == null ||
+                feedback.getCategory() == null || feedback.getMessage() == null) {
+            return false;
+        }
+
         FeedbackPK feedbackPK = FeedbackPK.builder()
                 .name(feedback.getName())
                 .email(feedback.getEmail())
                 .category(feedback.getCategory())
                 .message(feedback.getMessage())
                 .build();
-        System.out.println("Feedback submitted by " + feedback.getName() + ": " + feedback.getMessage());
         feedbackRepository.save(feedbackPK);
         FeedbackStrategy strategy = strategies.get(feedback.getCategory().toLowerCase());
         System.out.println(strategy);
