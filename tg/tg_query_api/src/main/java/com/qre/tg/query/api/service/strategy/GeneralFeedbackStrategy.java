@@ -1,6 +1,6 @@
 package com.qre.tg.query.api.service.strategy;
 
-import com.qre.tg.entity.feedback.Feedback;
+import com.qre.tg.entity.feedback.FeedbackPK;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -12,7 +12,7 @@ public class GeneralFeedbackStrategy implements FeedbackStrategy {
     }
 
     @Override
-    public String generateAcknowledgment(Feedback feedback) {
+    public String generateAcknowledgment(FeedbackPK feedback) {
         return String.format("""
                 Dear %s,
                 \nThank you for taking the time to share your thoughts with us. Your input is invaluable as we continually strive to improve SQRTS.
