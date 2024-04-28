@@ -35,6 +35,6 @@ public class FullRefundPolicyServiceImplTest {
       long actualRefund = refundPolicyService.calculateRefund(ticketMaster);
 
       // Verify the refund amount
-      assertEquals(expectedRefund, actualRefund);
+      assertEquals(expectedRefund, actualRefund, "Refund should be 94%");
     }
 }
