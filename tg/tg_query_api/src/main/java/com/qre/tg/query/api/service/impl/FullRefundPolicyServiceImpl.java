@@ -8,10 +8,9 @@ import org.springframework.stereotype.Service;
 public class FullRefundPolicyServiceImpl implements RefundPolicyService {
     @Override
     public long calculateRefund(TicketMaster ticketMaster) {
-
+        long totalAmount = ticketMaster.getTransactionData().getAmount();
         long refundPercentage = 6; //Service charges 3 percentage
         // Full refund policy implementation
-        return ((ticketMaster.getTransactionData().getAmount() *100))
-                - ((ticketMaster.getTransactionData().getAmount() *100) * refundPercentage / 100);
+        return totalAmount - (totalAmount * refundPercentage / 100);
     }
 }

@@ -13,6 +13,7 @@ public class PartialRefundPolicyServiceImpl implements RefundPolicyService {
     @Override
     public long calculateRefund(TicketMaster ticketMaster) {
         // Partial refund policy implementation
+        long totalAmount = ticketMaster.getTransactionData().getAmount();
         long refundPercentage;
         long hoursDifference = hoursDifference(ticketMaster.getEffectiveDateTime());
         if (hoursDifference <= 48) {
@@ -24,8 +25,7 @@ public class PartialRefundPolicyServiceImpl implements RefundPolicyService {
         else {
             refundPercentage = 0;
         }
-        return (ticketMaster.getTransactionData().getAmount() *100) -
-                ((ticketMaster.getTransactionData().getAmount() *100) * refundPercentage / 100);
+        return (totalAmount * refundPercentage / 100);
     }
 
     public long hoursDifference(Date effectiveDateTime) {
