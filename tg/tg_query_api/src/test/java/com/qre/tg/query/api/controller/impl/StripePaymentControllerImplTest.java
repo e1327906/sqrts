@@ -4,6 +4,12 @@ import static org.mockito.Mockito.*;
 
 import com.qre.tg.dto.base.APIResponse;
 import com.qre.tg.dto.base.JsonFieldName;
+import com.qre.tg.entity.ticket.TicketMaster;
+import com.qre.tg.query.api.common.RefundPolicyTypeEnum;
+import com.qre.tg.query.api.service.RefundPolicyService;
+import com.qre.tg.query.api.service.TicketService;
+import com.qre.tg.query.api.service.impl.FullRefundPolicyServiceImpl;
+import com.qre.tg.query.api.service.impl.RefundPolicyServiceFactoryImpl;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
@@ -17,11 +23,13 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
 public class StripePaymentControllerImplTest {
@@ -31,6 +39,15 @@ public class StripePaymentControllerImplTest {
 
     @Mock
     private PaymentIntent paymentIntentMock;
+
+    @Mock
+    private TicketService ticketService;
+
+    @Mock
+    private RefundPolicyServiceFactoryImpl refundPolicyServiceFactoryImpl;
+
+    @Mock
+    RefundPolicyService refundPolicyService;
 
     @BeforeEach
     void setUp() {
@@ -182,13 +199,22 @@ public class StripePaymentControllerImplTest {
      * Test directly with stripe
      * @throws StripeException
      */
-    @Disabled
     @Test
     void processRefundTest_success() throws StripeException {
         // Mocking input payload
         Map<String, Object> payload = new HashMap<>();
-        payload.put(JsonFieldName.PAYMENT_INTENT_ID, "test@example.com");
+        payload.put(JsonFieldName.PAYMENT_INTENT_ID, "pi_3PAW6TFcp66ilBOo0eJLEf4q");
+        payload.put(JsonFieldName.SERIAL_NUMBER, "2024042819413710WEB0000000000001");
         payload.put(JsonFieldName.AMOUNT, 200);
+
+        TicketMaster ticketMaster = TicketMaster.builder()
+                .serialNumber("2024042819413710WEB0000000000001")
+                .build();
+        when(ticketService.findBySerialNumber(anyString())).thenReturn(Optional.of(ticketMaster));
+        when(refundPolicyServiceFactoryImpl.createRefundPolicy(any())).thenReturn(refundPolicyService);
+
+        when(refundPolicyService.calculateRefund(any())).thenReturn(100L);
+
 
         // Calling the controller method
         ResponseEntity<APIResponse> response = controller.processRefund(payload);

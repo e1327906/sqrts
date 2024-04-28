@@ -30,10 +30,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.mail.MessagingException;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -92,13 +89,14 @@ class AuthenticationServiceTest {
                 .email(userRequest.getEmail())
                 .phoneNumber(userRequest.getPhoneNumber())
                 .password(passwordEncoder.encode(userRequest.getPassword()))
+                .userId(UUID.randomUUID())
                 .roles(roles)
                 .build();
         // Stubbing userRepository.save() to accept any User object
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.save(any(User.class))).thenReturn(user);
 
         when(applicationProperties.getEmailMessage()).thenReturn("Dear User, your OTP for registration is $. Use this code to validate your login");
-        when(applicationProperties.getEmailSubject()).thenReturn("DMP OTP");
+        //when(applicationProperties.getEmailSubject()).thenReturn("SQRT OTP");
 
         // When
         AuthenticationResponse authenticationResponse = service.register(userRequest);
@@ -160,6 +158,7 @@ class AuthenticationServiceTest {
                 .build();
         Set<Role> roles = Collections.singleton(role);
         user.setRoles(roles);
+        user.setUserId(UUID.randomUUID());
 
         Authentication authentication = mock(Authentication.class);
         SecurityContextHolder.getContext().setAuthentication(authentication);
