@@ -14,7 +14,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = DbFieldName.FEEDBACK_TABLE)
-public class Feedback extends AbstractPersistableEntity<UUID> {
+public class FeedbackPK extends AbstractPersistableEntity<UUID> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

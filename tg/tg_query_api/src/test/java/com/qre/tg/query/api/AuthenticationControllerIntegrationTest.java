@@ -31,15 +31,14 @@ class AuthenticationControllerIntegrationTest {
     void tearDown() {
     }
 
-    @Disabled
     @Test
     void register_SuccessfulRegistration_ReturnsAccessTokenAndRefreshToken() throws Exception {
 
         // given - setup or precondition
         // Given
         UserRequest request = UserRequest.builder()
-                .userName("zawmin")
-                .email("zawmin@gmail.com")
+                .userName("zawminadmin")
+                .email("zawminadmin@gmail.com")
                 .phoneNumber("1122334455")
                 .password("P@ssw0rd")
                 .role(RoleType.ROLE_USER.name())

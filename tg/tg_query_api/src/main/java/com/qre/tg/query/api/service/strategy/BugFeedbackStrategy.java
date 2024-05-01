@@ -1,6 +1,6 @@
 package com.qre.tg.query.api.service.strategy;
 
-import com.qre.tg.entity.feedback.Feedback;
+import com.qre.tg.entity.feedback.FeedbackPK;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -12,7 +12,7 @@ public class BugFeedbackStrategy implements FeedbackStrategy {
     }
 
     @Override
-    public String generateAcknowledgment(Feedback feedback) {
+    public String generateAcknowledgment(FeedbackPK feedback) {
         return String.format("""
                 Dear %s,
                 \nWe sincerely appreciate you bringing the issue to our attention. Our team is currently investigating the reported bug. Your input is invaluable as we continually strive to improve SQRTS, we'll work diligently to resolve it as soon as possible.

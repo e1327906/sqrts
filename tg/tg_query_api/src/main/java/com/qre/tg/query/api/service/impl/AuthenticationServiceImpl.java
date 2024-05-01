@@ -89,7 +89,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             .role(user.getRoles().stream().findFirst().get().getName().name())
             .userName(user.getUserName())
             .phoneNumber(user.getPhoneNumber())
-            .userId(user.getId().toString())
+            .userId(savedUser.getId().toString())
             .build();
 
   }
