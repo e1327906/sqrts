@@ -1,4 +1,4 @@
-name: SQRTS CICD with Maven
+name: SQRTS CICD
 
 on:
   push:
