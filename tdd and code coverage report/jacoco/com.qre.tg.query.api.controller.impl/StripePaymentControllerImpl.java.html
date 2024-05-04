@@ -1,0 +1,524 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StripePaymentControllerImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tg_query_api</a> &gt; <a href="index.source.html" class="el_package">com.qre.tg.query.api.controller.impl</a> &gt; <span class="el_source">StripePaymentControllerImpl.java</span></div><h1>StripePaymentControllerImpl.java</h1><pre class="source lang-java linenums">package com.qre.tg.query.api.controller.impl;
+
+import com.qre.tg.dto.base.APIResponse;
+import com.qre.tg.dto.base.JsonFieldName;
+import com.qre.tg.entity.ticket.TicketMaster;
+import com.qre.tg.query.api.common.RefundPolicyTypeEnum;
+import com.qre.tg.query.api.controller.StripePaymentController;
+import com.qre.tg.query.api.service.RefundPolicyService;
+import com.qre.tg.query.api.service.TicketService;
+import com.qre.tg.query.api.service.impl.RefundPolicyServiceFactoryImpl;
+import com.stripe.Stripe;
+import com.stripe.exception.SignatureVerificationException;
+import com.stripe.exception.StripeException;
+import com.stripe.model.*;
+import com.stripe.net.Webhook;
+import com.stripe.param.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.PostConstruct;
+import java.util.*;
+
+@RestController
+@RequestMapping(&quot;/api/v1/payments&quot;)
+public class StripePaymentControllerImpl implements StripePaymentController {
+
+<span class="fc" id="L31">    private final Logger logger = LoggerFactory.getLogger(this.getClass());</span>
+
+    @Value(&quot;${stripe.secret.key}&quot;)
+    private String secretKey;
+
+    // This is your Stripe CLI webhook secret for testing your endpoint locally.
+<span class="fc" id="L37">    String endpointSecret = &quot;whsec_a12b94b83b6da81690ec182e6d2f9b4f526f79aa63090ae2740ab31b0caef46b&quot;;</span>
+
+    private final TicketService ticketService;
+
+    private final RefundPolicyServiceFactoryImpl refundPolicyServiceFactoryImpl;
+
+    public StripePaymentControllerImpl(TicketService ticketService,
+<span class="fc" id="L44">                                       RefundPolicyServiceFactoryImpl refundPolicyServiceFactoryImpl) {</span>
+<span class="fc" id="L45">        this.ticketService = ticketService;</span>
+<span class="fc" id="L46">        this.refundPolicyServiceFactoryImpl = refundPolicyServiceFactoryImpl;</span>
+<span class="fc" id="L47">    }</span>
+
+    @PostConstruct
+    public void init() {
+<span class="fc" id="L51">        Stripe.apiKey = secretKey;</span>
+<span class="fc" id="L52">    }</span>
+
+    /**
+     * {
+     * &quot;email&quot;: &quot;zawminthan@gmail.com&quot;,
+     * &quot;allowFutureUsage&quot;: true,
+     * &quot;currency&quot;: &quot;sgd&quot;,
+     * &quot;amount&quot; : 200
+     * }
+     *
+     * @param payLoad
+     * @return
+     */
+    @PostMapping(&quot;/CreatePaymentIntent&quot;)
+    public ResponseEntity&lt;APIResponse&gt; createPaymentIntent(@RequestBody Map&lt;String, Object&gt; payLoad) {
+
+        try {
+
+            String customerId;
+<span class="fc" id="L71">            String email = payLoad.get(JsonFieldName.EMAIL).toString();</span>
+<span class="fc" id="L72">            boolean allowFutureUsage = (boolean) payLoad.get(JsonFieldName.ALLOW_FUTURE_USAGE);</span>
+
+            CustomerCollection customerCollection =
+<span class="fc" id="L75">                    Customer.list(</span>
+                            CustomerListParams
+<span class="fc" id="L77">                                    .builder()</span>
+<span class="fc" id="L78">                                    .setEmail(email)</span>
+<span class="fc" id="L79">                                    .setLimit(1L)</span>
+<span class="fc" id="L80">                                    .build()</span>
+                    );
+
+            //Checks the if the customer exists, if not creates a new customer
+<span class="fc bfc" id="L84" title="All 2 branches covered.">            if (customerCollection.getData().size() != 0) {</span>
+<span class="fc" id="L85">                customerId = customerCollection.getData().get(0).getId();</span>
+
+            }
+            else {
+<span class="fc" id="L89">                Customer customer = Customer.create(CustomerCreateParams</span>
+<span class="fc" id="L90">                        .builder()</span>
+<span class="fc" id="L91">                        .setEmail(email)</span>
+<span class="fc" id="L92">                        .build());</span>
+<span class="fc" id="L93">                customerId = customer.getId();</span>
+            }
+
+
+<span class="fc" id="L97">            PaymentIntentCreateParams createParams = new</span>
+                    PaymentIntentCreateParams.Builder()
+<span class="fc" id="L99">                    .setCurrency(payLoad.get(JsonFieldName.CURRENCY).toString())</span>
+<span class="fc" id="L100">                    .setAmount(Long.valueOf(payLoad.get(JsonFieldName.AMOUNT).toString()))</span>
+                    //.setPaymentMethod(&quot;pm_card_visa&quot;)
+<span class="fc" id="L102">                    .addPaymentMethodType(&quot;card&quot;)</span>
+<span class="fc" id="L103">                    .setCustomer(customerId)</span>
+<span class="pc bpc" id="L104" title="1 of 2 branches missed.">                    .setSetupFutureUsage(allowFutureUsage ?</span>
+<span class="fc" id="L105">                            PaymentIntentCreateParams.SetupFutureUsage.ON_SESSION :</span>
+<span class="nc" id="L106">                            PaymentIntentCreateParams.SetupFutureUsage.OFF_SESSION)</span>
+<span class="fc" id="L107">                    .build();</span>
+
+<span class="fc" id="L109">            PaymentIntent paymentIntent = PaymentIntent.create(createParams);</span>
+<span class="fc" id="L110">            logger.info(&quot;PaymentController.createPaymentIntent clientSecret:{}&quot;, paymentIntent.getClientSecret());</span>
+<span class="fc" id="L111">            logger.info(&quot;PaymentController.createPaymentIntent getId:{}&quot;, paymentIntent.getId());</span>
+<span class="fc" id="L112">            logger.info(&quot;PaymentController.createPaymentIntent getLatestCharge:{}&quot;, paymentIntent.getLatestCharge());</span>
+<span class="fc" id="L113">            logger.info(&quot;PaymentController.createPaymentIntent getInvoice:{}&quot;, paymentIntent.getInvoice());</span>
+<span class="fc" id="L114">            Map&lt;String, Object&gt; response = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L115">            response.put(JsonFieldName.CLIENT_SECRET, paymentIntent.getClientSecret());</span>
+<span class="fc" id="L116">            response.put(JsonFieldName.PAYMENT_INTENT_ID, paymentIntent.getId());</span>
+
+<span class="fc" id="L118">            APIResponse apiResponse = APIResponse.builder()</span>
+<span class="fc" id="L119">                    .responseCode(String.valueOf(HttpStatus.OK.value()))</span>
+<span class="fc" id="L120">                    .responseMsg(HttpStatus.OK.getReasonPhrase())</span>
+<span class="fc" id="L121">                    .responseData(response)</span>
+<span class="fc" id="L122">                    .build();</span>
+<span class="fc" id="L123">            return ResponseEntity.ok().body(apiResponse);</span>
+
+<span class="nc" id="L125">        } catch (StripeException e) {</span>
+<span class="nc" id="L126">            APIResponse apiResponse = APIResponse.builder()</span>
+<span class="nc" id="L127">                    .responseCode(String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()))</span>
+<span class="nc" id="L128">                    .responseMsg(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())</span>
+<span class="nc" id="L129">                    .responseData(null)</span>
+<span class="nc" id="L130">                    .build();</span>
+<span class="nc" id="L131">            return ResponseEntity.ok().body(apiResponse);</span>
+        }
+    }
+
+    /**
+     * {
+     * &quot;email&quot;:&quot;dmpuser100@gmail.com&quot;
+     * }
+     *
+     * @param payLoad
+     * @return
+     */
+    @PostMapping(&quot;/FetchCustomerCards&quot;)
+    public ResponseEntity&lt;APIResponse&gt; fetchCustomerCards(@RequestBody Map&lt;String, Object&gt; payLoad) {
+        try {
+
+            String customerId;
+<span class="fc" id="L148">            String email = payLoad.get(JsonFieldName.EMAIL).toString();</span>
+
+            CustomerCollection customerCollection =
+<span class="fc" id="L151">                    Customer.list(</span>
+                            CustomerListParams
+<span class="fc" id="L153">                                    .builder()</span>
+<span class="fc" id="L154">                                    .setEmail(email)</span>
+<span class="fc" id="L155">                                    .setLimit(1L)</span>
+<span class="fc" id="L156">                                    .build()</span>
+                    );
+
+<span class="fc" id="L159">            List&lt;PaymentMethod&gt; paymentMethods = new ArrayList&lt;&gt;();</span>
+            //Checks the if the customer exists, if not creates a new customer
+<span class="pc bpc" id="L161" title="1 of 2 branches missed.">            if (customerCollection.getData().size() != 0) {</span>
+<span class="fc" id="L162">                customerId = customerCollection.getData().get(0).getId();</span>
+
+                paymentMethods = PaymentMethod
+<span class="fc" id="L165">                        .list(</span>
+                                PaymentMethodListParams
+<span class="fc" id="L167">                                        .builder()</span>
+<span class="fc" id="L168">                                        .setCustomer(customerId)</span>
+<span class="fc" id="L169">                                        .setType(PaymentMethodListParams.Type.CARD)</span>
+<span class="fc" id="L170">                                        .build()</span>
+<span class="fc" id="L171">                        ).getData();</span>
+            }
+
+<span class="fc" id="L174">            APIResponse apiResponse = APIResponse.builder()</span>
+<span class="fc" id="L175">                    .responseCode(String.valueOf(HttpStatus.OK.value()))</span>
+<span class="fc" id="L176">                    .responseMsg(HttpStatus.OK.getReasonPhrase())</span>
+<span class="fc" id="L177">                    .responseData(paymentMethods)</span>
+<span class="fc" id="L178">                    .build();</span>
+<span class="fc" id="L179">            return ResponseEntity.ok().body(apiResponse);</span>
+
+<span class="nc" id="L181">        } catch (StripeException e) {</span>
+
+<span class="nc" id="L183">            APIResponse apiResponse = APIResponse.builder()</span>
+<span class="nc" id="L184">                    .responseCode(String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()))</span>
+<span class="nc" id="L185">                    .responseMsg(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())</span>
+<span class="nc" id="L186">                    .responseData(null)</span>
+<span class="nc" id="L187">                    .build();</span>
+<span class="nc" id="L188">            return ResponseEntity.ok().body(apiResponse);</span>
+        }
+    }
+
+    @PostMapping(&quot;/DeletePaymentMethod&quot;)
+    public ResponseEntity&lt;APIResponse&gt; deletePaymentMethod(@RequestBody Map&lt;String, Object&gt; payLoad) {
+        try {
+<span class="fc" id="L195">            String paymentMethodId = payLoad.get(JsonFieldName.PAYMENT_METHOD_ID).toString();</span>
+
+<span class="fc" id="L197">            PaymentMethod paymentMethod =</span>
+<span class="nc" id="L198">                    PaymentMethod.retrieve(paymentMethodId);</span>
+<span class="nc" id="L199">            paymentMethod.detach();</span>
+
+<span class="nc" id="L201">            APIResponse apiResponse = APIResponse.builder()</span>
+<span class="nc" id="L202">                    .responseCode(String.valueOf(HttpStatus.OK.value()))</span>
+<span class="nc" id="L203">                    .responseMsg(HttpStatus.OK.getReasonPhrase())</span>
+<span class="nc" id="L204">                    .responseData(null)</span>
+<span class="nc" id="L205">                    .build();</span>
+<span class="nc" id="L206">            return ResponseEntity.ok().body(apiResponse);</span>
+
+<span class="fc" id="L208">        } catch (StripeException e) {</span>
+<span class="fc" id="L209">            APIResponse apiResponse = APIResponse.builder()</span>
+<span class="fc" id="L210">                    .responseCode(String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()))</span>
+<span class="fc" id="L211">                    .responseMsg(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())</span>
+<span class="fc" id="L212">                    .responseData(null)</span>
+<span class="fc" id="L213">                    .build();</span>
+<span class="fc" id="L214">            return ResponseEntity.ok().body(apiResponse);</span>
+        }
+    }
+
+    @PostMapping(&quot;/CreateSetupIntent&quot;)
+    public ResponseEntity&lt;APIResponse&gt; createSetupIntent(@RequestBody Map&lt;String, Object&gt; payLoad) {
+        //Stripe.apiKey = secretKey;
+        try {
+
+            String customerId;
+<span class="fc" id="L224">            String email = payLoad.get(JsonFieldName.EMAIL).toString();</span>
+
+            CustomerCollection customerCollection =
+<span class="fc" id="L227">                    Customer.list(</span>
+                            CustomerListParams
+<span class="fc" id="L229">                                    .builder()</span>
+<span class="fc" id="L230">                                    .setEmail(email)</span>
+<span class="fc" id="L231">                                    .setLimit(1L)</span>
+<span class="fc" id="L232">                                    .build()</span>
+                    );
+
+            //Checks the if the customer exists, if not creates a new customer
+<span class="pc bpc" id="L236" title="1 of 2 branches missed.">            if (customerCollection.getData().size() != 0) {</span>
+<span class="fc" id="L237">                customerId = customerCollection.getData().get(0).getId();</span>
+
+            }
+            else {
+<span class="nc" id="L241">                Customer customer = Customer.create(CustomerCreateParams</span>
+<span class="nc" id="L242">                        .builder()</span>
+<span class="nc" id="L243">                        .setEmail(email)</span>
+<span class="nc" id="L244">                        .build());</span>
+<span class="nc" id="L245">                customerId = customer.getId();</span>
+            }
+
+            //Creates a temporary secret key linked with the customer
+<span class="fc" id="L249">            EphemeralKey ephemeralKey = EphemeralKey.create(EphemeralKeyCreateParams</span>
+<span class="fc" id="L250">                    .builder()</span>
+<span class="fc" id="L251">                    .setCustomer(customerId)</span>
+<span class="fc" id="L252">                    .setStripeVersion(Stripe.API_VERSION)</span>
+<span class="fc" id="L253">                    .build());</span>
+
+            //Creates a new payment intent with amount passed in from the client
+<span class="fc" id="L256">            SetupIntent setupIntent = SetupIntent.create(SetupIntentCreateParams</span>
+<span class="fc" id="L257">                    .builder()</span>
+<span class="fc" id="L258">                    .setCustomer(customerId)</span>
+<span class="fc" id="L259">                    .setAutomaticPaymentMethods(SetupIntentCreateParams.AutomaticPaymentMethods</span>
+<span class="fc" id="L260">                            .builder()</span>
+<span class="fc" id="L261">                            .setEnabled(true)</span>
+<span class="fc" id="L262">                            .build())</span>
+<span class="fc" id="L263">                    .build());</span>
+
+<span class="fc" id="L265">            logger.info(&quot;Create Setup Intent successfully to token: {}&quot;, setupIntent.getClientSecret());</span>
+
+<span class="fc" id="L267">            Map&lt;String, Object&gt; response = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L268">            response.put(JsonFieldName.CLIENT_SECRET, setupIntent.getClientSecret());</span>
+<span class="fc" id="L269">            response.put(JsonFieldName.EPHEMERAL_KEY, ephemeralKey.getId());</span>
+<span class="fc" id="L270">            response.put(JsonFieldName.CUSTOMER_ID, customerId);</span>
+
+<span class="fc" id="L272">            APIResponse apiResponse = APIResponse.builder()</span>
+<span class="fc" id="L273">                    .responseCode(String.valueOf(HttpStatus.OK.value()))</span>
+<span class="fc" id="L274">                    .responseMsg(HttpStatus.OK.getReasonPhrase())</span>
+<span class="fc" id="L275">                    .responseData(response)</span>
+<span class="fc" id="L276">                    .build();</span>
+<span class="fc" id="L277">            return ResponseEntity.ok().body(apiResponse);</span>
+
+<span class="nc" id="L279">        } catch (StripeException e) {</span>
+<span class="nc" id="L280">            APIResponse apiResponse = APIResponse.builder()</span>
+<span class="nc" id="L281">                    .responseCode(String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()))</span>
+<span class="nc" id="L282">                    .responseMsg(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())</span>
+<span class="nc" id="L283">                    .responseData(null)</span>
+<span class="nc" id="L284">                    .build();</span>
+<span class="nc" id="L285">            return ResponseEntity.ok().body(apiResponse);</span>
+        }
+    }
+
+    @PostMapping(&quot;/CreatePaymentIntentByNewCard&quot;)
+    public ResponseEntity&lt;APIResponse&gt; createPaymentIntentByNewCard(@RequestBody Map&lt;String, Object&gt; payLoad) {
+
+        try {
+
+            String customerId;
+<span class="fc" id="L295">            String email = payLoad.get(JsonFieldName.EMAIL).toString();</span>
+<span class="fc" id="L296">            boolean allowFutureUsage = (boolean) payLoad.get(JsonFieldName.ALLOW_FUTURE_USAGE);</span>
+            PaymentIntentCreateParams createParams;
+<span class="pc bpc" id="L298" title="1 of 2 branches missed.">            if (allowFutureUsage) {</span>
+                CustomerCollection customerCollection =
+<span class="fc" id="L300">                        Customer.list(</span>
+                                CustomerListParams
+<span class="fc" id="L302">                                        .builder()</span>
+<span class="fc" id="L303">                                        .setEmail(email)</span>
+<span class="fc" id="L304">                                        .setLimit(1L)</span>
+<span class="fc" id="L305">                                        .build()</span>
+                        );
+
+                //Checks the if the customer exists, if not creates a new customer
+<span class="pc bpc" id="L309" title="1 of 2 branches missed.">                if (customerCollection.getData().size() != 0) {</span>
+<span class="fc" id="L310">                    customerId = customerCollection.getData().get(0).getId();</span>
+
+                }
+                else {
+<span class="nc" id="L314">                    Customer customer = Customer.create(CustomerCreateParams</span>
+<span class="nc" id="L315">                            .builder()</span>
+<span class="nc" id="L316">                            .setEmail(email)</span>
+<span class="nc" id="L317">                            .build());</span>
+<span class="nc" id="L318">                    customerId = customer.getId();</span>
+                }
+
+
+<span class="fc" id="L322">                createParams = new</span>
+                        PaymentIntentCreateParams.Builder()
+<span class="fc" id="L324">                        .setCurrency(payLoad.get(JsonFieldName.CURRENCY).toString())</span>
+<span class="fc" id="L325">                        .setAmount(Long.valueOf(payLoad.get(JsonFieldName.AMOUNT).toString()))</span>
+                        //.setPaymentMethod(&quot;pm_card_visa&quot;)
+<span class="fc" id="L327">                        .addPaymentMethodType(&quot;card&quot;)</span>
+<span class="fc" id="L328">                        .setCustomer(customerId)</span>
+<span class="pc bpc" id="L329" title="1 of 2 branches missed.">                        .setSetupFutureUsage(allowFutureUsage ?</span>
+<span class="fc" id="L330">                                PaymentIntentCreateParams.SetupFutureUsage.ON_SESSION :</span>
+<span class="nc" id="L331">                                PaymentIntentCreateParams.SetupFutureUsage.OFF_SESSION)</span>
+<span class="fc" id="L332">                        .build();</span>
+<span class="fc" id="L333">            }</span>
+            else {
+<span class="nc" id="L335">                createParams = new</span>
+                        PaymentIntentCreateParams.Builder()
+<span class="nc" id="L337">                        .setCurrency(payLoad.get(JsonFieldName.CURRENCY).toString())</span>
+<span class="nc" id="L338">                        .setAmount(Long.valueOf(payLoad.get(JsonFieldName.AMOUNT).toString()))</span>
+                        //.setPaymentMethod(&quot;pm_card_visa&quot;)
+<span class="nc" id="L340">                        .addPaymentMethodType(&quot;card&quot;)</span>
+<span class="nc" id="L341">                        .build();</span>
+            }
+<span class="fc" id="L343">            PaymentIntent paymentIntent = PaymentIntent.create(createParams);</span>
+
+<span class="fc" id="L345">            logger.info(&quot;PaymentController.createPaymentIntentByNewCard clientSecret:{}&quot;, paymentIntent.getClientSecret());</span>
+<span class="fc" id="L346">            logger.info(&quot;PaymentController.createPaymentIntentByNewCard getId:{}&quot;, paymentIntent.getId());</span>
+<span class="fc" id="L347">            logger.info(&quot;PaymentController.createPaymentIntentByNewCard getLatestCharge:{}&quot;, paymentIntent.getLatestCharge());</span>
+<span class="fc" id="L348">            logger.info(&quot;PaymentController.createPaymentIntentByNewCard getInvoice:{}&quot;, paymentIntent.getInvoice());</span>
+<span class="fc" id="L349">            Map&lt;String, Object&gt; response = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L350">            response.put(JsonFieldName.CLIENT_SECRET, paymentIntent.getClientSecret());</span>
+<span class="fc" id="L351">            response.put(JsonFieldName.PAYMENT_INTENT_ID, paymentIntent.getId());</span>
+
+<span class="fc" id="L353">            APIResponse apiResponse = APIResponse.builder()</span>
+<span class="fc" id="L354">                    .responseCode(String.valueOf(HttpStatus.OK.value()))</span>
+<span class="fc" id="L355">                    .responseMsg(HttpStatus.OK.getReasonPhrase())</span>
+<span class="fc" id="L356">                    .responseData(response)</span>
+<span class="fc" id="L357">                    .build();</span>
+<span class="fc" id="L358">            return ResponseEntity.ok().body(apiResponse);</span>
+
+<span class="nc" id="L360">        } catch (StripeException e) {</span>
+<span class="nc" id="L361">            APIResponse apiResponse = APIResponse.builder()</span>
+<span class="nc" id="L362">                    .responseCode(String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()))</span>
+<span class="nc" id="L363">                    .responseMsg(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())</span>
+<span class="nc" id="L364">                    .responseData(null)</span>
+<span class="nc" id="L365">                    .build();</span>
+<span class="nc" id="L366">            return ResponseEntity.ok().body(apiResponse);</span>
+        }
+    }
+
+    @RequestMapping(value = &quot;/webhook&quot;, method = RequestMethod.POST)
+    @Override
+    public ResponseEntity&lt;String&gt; webhook(String payload, String sigHeader) {
+
+<span class="nc" id="L374">        Event event = null;</span>
+        try {
+<span class="nc" id="L376">            event = Webhook.constructEvent(payload, sigHeader, endpointSecret);</span>
+<span class="nc" id="L377">        } catch (SignatureVerificationException e) {</span>
+<span class="nc" id="L378">            logger.info(&quot;Failed signature verification&quot;);</span>
+<span class="nc" id="L379">            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);</span>
+<span class="nc" id="L380">        }</span>
+
+<span class="nc" id="L382">        EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();</span>
+<span class="nc" id="L383">        StripeObject stripeObject = null;</span>
+
+<span class="nc bnc" id="L385" title="All 2 branches missed.">        if (dataObjectDeserializer.getObject().isPresent()) {</span>
+<span class="nc" id="L386">            stripeObject = dataObjectDeserializer.getObject().get();</span>
+        }
+        else {
+            // Deserialization failed, probably due to an API version mismatch.
+            // Refer to the Javadoc documentation on `EventDataObjectDeserializer` for
+            // instructions on how to handle this case, or return an error here.
+        }
+
+        // Handle the event
+<span class="nc bnc" id="L395" title="All 4 branches missed.">        switch (event.getType()) {</span>
+            case &quot;payment_intent.succeeded&quot;:
+<span class="nc" id="L397">                PaymentIntent paymentIntent = (PaymentIntent) stripeObject;</span>
+<span class="nc" id="L398">                logger.info(&quot;Payment for &quot; + paymentIntent.getAmount() + &quot; succeeded.&quot; + &quot;last charge:&quot; + paymentIntent.getLatestCharge());</span>
+<span class="nc" id="L399">                logger.info(&quot;PaymentController.webhook getId:{}&quot;, paymentIntent.getId());</span>
+<span class="nc" id="L400">                logger.info(&quot;PaymentController.webhook getLatestCharge:{}&quot;, paymentIntent.getLatestCharge());</span>
+<span class="nc" id="L401">                logger.info(&quot;PaymentController.webhook getInvoice:{}&quot;, paymentIntent.getInvoice());</span>
+                // Then define and call a method to handle the successful payment intent.
+                // handlePaymentIntentSucceeded(paymentIntent);
+<span class="nc" id="L404">                break;</span>
+            case &quot;payment_method.attached&quot;:
+<span class="nc" id="L406">                PaymentMethod paymentMethod = (PaymentMethod) stripeObject;</span>
+                // Then define and call a method to handle the successful attachment of a PaymentMethod.
+                // handlePaymentMethodAttached(paymentMethod);
+<span class="nc" id="L409">                logger.info(&quot;payment_intent.attached: &quot; + event.getType());</span>
+<span class="nc" id="L410">                break;</span>
+            case &quot;payment_intent.created&quot;:
+                //PaymentMethod paymentMethod = (PaymentMethod) stripeObject;
+                // Then define and call a method to handle the successful attachment of a PaymentMethod.
+                // handlePaymentMethodAttached(paymentMethod);
+<span class="nc" id="L415">                logger.info(&quot;payment_intent.created: &quot; + event.getType());</span>
+<span class="nc" id="L416">                break;</span>
+            default:
+<span class="nc" id="L418">                logger.info(&quot;Unhandled event type: &quot; + event.getType());</span>
+                break;
+        }
+<span class="nc" id="L421">        return new ResponseEntity&lt;&gt;(&quot;Success&quot;, HttpStatus.OK);</span>
+    }
+
+    @RequestMapping(value = &quot;/Refund&quot;, method = RequestMethod.POST)
+    @Override
+    public ResponseEntity&lt;APIResponse&gt; processRefund(@RequestBody Map&lt;String, Object&gt; payLoad) {
+        try {
+            //Stripe.apiKey = secretKey;
+<span class="fc" id="L429">            String serialNumber = payLoad.get(JsonFieldName.SERIAL_NUMBER).toString();</span>
+<span class="fc" id="L430">            String paymentIntentId = payLoad.get(JsonFieldName.PAYMENT_INTENT_ID).toString();</span>
+<span class="fc" id="L431">            String amount = payLoad.get(JsonFieldName.AMOUNT).toString();</span>
+            /*if (amount != null) {
+                amount = amount;
+            }*/
+            //Find charge from payment intent
+<span class="fc" id="L436">            ChargeListParams chargeParams = ChargeListParams.builder()</span>
+<span class="fc" id="L437">                    .setPaymentIntent(paymentIntentId)</span>
+<span class="fc" id="L438">                    .setLimit(1L)</span>
+<span class="fc" id="L439">                    .build();</span>
+<span class="fc" id="L440">            ChargeCollection charges = Charge.list(chargeParams);</span>
+<span class="fc" id="L441">            int chargeCount = charges.getData().size();</span>
+<span class="pc bpc" id="L442" title="1 of 2 branches missed.">            if (chargeCount == 0) {</span>
+<span class="nc" id="L443">                APIResponse apiResponse = APIResponse.builder()</span>
+<span class="nc" id="L444">                        .responseCode(String.valueOf(HttpStatus.NOT_FOUND.value()))</span>
+<span class="nc" id="L445">                        .responseMsg(&quot;No charge found&quot;)</span>
+<span class="nc" id="L446">                        .responseData(&quot;&quot;)</span>
+<span class="nc" id="L447">                        .build();</span>
+<span class="nc" id="L448">                return ResponseEntity.ok().body(apiResponse);</span>
+            }
+<span class="fc" id="L450">            Charge data = charges.getData().get(0);</span>
+
+
+           /* long amountL = 0L;
+            if (amount.isEmpty()) {
+                //treat as full refund
+                amountL = data.getAmount();
+            }
+            else {
+                amountL = Long.parseLong(amount) * 100;
+                if (amountL &gt; data.getAmount()) {
+                    APIResponse apiResponse = APIResponse.builder()
+                            .responseCode(String.valueOf(HttpStatus.BAD_REQUEST.value()))
+                            .responseMsg(&quot;Amount more than purchase value&quot;)
+                            .responseData(&quot;&quot;)
+                            .build();
+                    return ResponseEntity.ok().body(apiResponse);
+                }
+            }*/
+
+<span class="fc" id="L470">            Optional&lt;TicketMaster&gt;  ticketMaster = ticketService.findBySerialNumber(serialNumber);</span>
+<span class="pc bpc" id="L471" title="1 of 2 branches missed.">            if(ticketMaster.isEmpty()){</span>
+<span class="nc" id="L472">                APIResponse apiResponse = APIResponse.builder()</span>
+<span class="nc" id="L473">                        .responseCode(String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()))</span>
+<span class="nc" id="L474">                        .responseMsg(HttpStatus.NOT_FOUND.getReasonPhrase())</span>
+<span class="nc" id="L475">                        .responseData(null)</span>
+<span class="nc" id="L476">                        .build();</span>
+<span class="nc" id="L477">                return ResponseEntity.ok().body(apiResponse);</span>
+            }
+
+            // Create policy
+<span class="fc" id="L481">            RefundPolicyService refundPolicyService = refundPolicyServiceFactoryImpl.createRefundPolicy(RefundPolicyTypeEnum.PARTIAL_REFUND);</span>
+<span class="pc bpc" id="L482" title="1 of 2 branches missed.">            if(refundPolicyServiceFactoryImpl.hoursDifference(</span>
+<span class="fc" id="L483">                    ticketMaster.get().getEffectiveDateTime()) &lt;=24){</span>
+<span class="fc" id="L484">                refundPolicyService = refundPolicyServiceFactoryImpl.createRefundPolicy(RefundPolicyTypeEnum.FULL_REFUND);</span>
+            }
+<span class="fc" id="L486">            long refundAmount = refundPolicyService.calculateRefund(ticketMaster.get());</span>
+
+            //amount integer, charge string, payment_intent string, reason string
+            RefundCreateParams refundParams =
+<span class="fc" id="L490">                    RefundCreateParams.builder()</span>
+<span class="fc" id="L491">                            .setCharge(data.getId())</span>
+<span class="fc" id="L492">                            .setAmount(refundAmount)</span>
+<span class="fc" id="L493">                            .setReason(RefundCreateParams.Reason.REQUESTED_BY_CUSTOMER)</span>
+<span class="fc" id="L494">                            .build();</span>
+<span class="nc" id="L495">            Refund refundResponse = Refund.create(refundParams);</span>
+<span class="nc" id="L496">            logger.info(String.valueOf(refundResponse));</span>
+
+<span class="nc" id="L498">            double refundAmt = ((double) refundResponse.getAmount()) / 100.0;</span>
+<span class="nc" id="L499">            ticketService.updateRefund(serialNumber);</span>
+
+<span class="nc" id="L501">            APIResponse apiResponse = APIResponse.builder()</span>
+<span class="nc" id="L502">                    .responseCode(String.valueOf(HttpStatus.OK.value()))</span>
+<span class="nc" id="L503">                    .responseMsg(HttpStatus.OK.getReasonPhrase())</span>
+<span class="nc" id="L504">                    .responseData(refundAmt + &quot; &quot; + refundResponse.getCurrency() + &quot; refunded successfully&quot;)</span>
+<span class="nc" id="L505">                    .build();</span>
+<span class="nc" id="L506">            return ResponseEntity.ok().body(apiResponse);</span>
+
+<span class="fc" id="L508">        } catch (StripeException e) {</span>
+<span class="fc" id="L509">            String errorMsg = HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase();</span>
+<span class="pc bpc" id="L510" title="3 of 4 branches missed.">            if (e.getCode() != null &amp;&amp; e.getCode().equals(&quot;charge_already_refunded&quot;)) {</span>
+<span class="nc" id="L511">                errorMsg = &quot;charge already refunded&quot;;</span>
+            }
+<span class="fc" id="L513">            logger.info(e.getMessage());</span>
+<span class="fc" id="L514">            APIResponse apiResponse = APIResponse.builder()</span>
+<span class="fc" id="L515">                    .responseCode(String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()))</span>
+<span class="fc" id="L516">                    .responseMsg(errorMsg)</span>
+<span class="fc" id="L517">                    .responseData(null)</span>
+<span class="fc" id="L518">                    .build();</span>
+<span class="fc" id="L519">            return ResponseEntity.ok().body(apiResponse);</span>
+        }
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

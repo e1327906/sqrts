@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>QRValidatorControllerImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tg_query_api</a> &gt; <a href="index.source.html" class="el_package">com.qre.tg.query.api.controller.impl</a> &gt; <span class="el_source">QRValidatorControllerImpl.java</span></div><h1>QRValidatorControllerImpl.java</h1><pre class="source lang-java linenums">package com.qre.tg.query.api.controller.impl;
+
+import com.qre.cmel.exception.EntryExitMismatchException;
+import com.qre.cmel.exception.InvalidJourneyException;
+import com.qre.cmel.exception.InvalidTicketException;
+import com.qre.tg.dto.base.APIResponse;
+import com.qre.tg.dto.qr.ValidationRequest;
+import com.qre.tg.query.api.controller.QRValidatorController;
+import com.qre.tg.query.api.service.QRValidatorService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping(&quot;/api/v1/validator&quot;)
+<span class="fc" id="L17">@RequiredArgsConstructor</span>
+public class QRValidatorControllerImpl implements QRValidatorController {
+
+    private final QRValidatorService qrValidatorService;
+
+    @PostMapping(&quot;/Validate&quot;)
+    @Override
+    public ResponseEntity&lt;APIResponse&gt; validate(@RequestBody ValidationRequest request) {
+<span class="nc" id="L25">        APIResponse apiResponse = null;</span>
+        try {
+<span class="nc" id="L27">            qrValidatorService.validate(request);</span>
+<span class="nc" id="L28">            apiResponse = APIResponse.builder()</span>
+<span class="nc" id="L29">                    .responseCode(String.valueOf(HttpStatus.OK.value()))</span>
+<span class="nc" id="L30">                    .responseMsg(HttpStatus.OK.getReasonPhrase())</span>
+<span class="nc" id="L31">                    .build();</span>
+<span class="nc" id="L32">        } catch (InvalidTicketException ex) {</span>
+
+<span class="nc" id="L34">            apiResponse = APIResponse.builder()</span>
+<span class="nc" id="L35">                    .responseCode(&quot;800&quot;)</span>
+<span class="nc" id="L36">                    .responseMsg(ex.getMessage())</span>
+<span class="nc" id="L37">                    .build();</span>
+
+<span class="nc" id="L39">        } catch (InvalidJourneyException ex) {</span>
+<span class="nc" id="L40">            apiResponse = APIResponse.builder()</span>
+<span class="nc" id="L41">                    .responseCode(&quot;801&quot;)</span>
+<span class="nc" id="L42">                    .responseMsg(ex.getMessage())</span>
+<span class="nc" id="L43">                    .build();</span>
+<span class="nc" id="L44">        } catch (EntryExitMismatchException ex) {</span>
+<span class="nc" id="L45">            apiResponse = APIResponse.builder()</span>
+<span class="nc" id="L46">                    .responseCode(&quot;802&quot;)</span>
+<span class="nc" id="L47">                    .responseMsg(ex.getMessage())</span>
+<span class="nc" id="L48">                    .build();</span>
+<span class="nc" id="L49">        } catch (Exception ex) {</span>
+<span class="nc" id="L50">            apiResponse = APIResponse.builder()</span>
+<span class="nc" id="L51">                    .responseCode(String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()))</span>
+<span class="nc" id="L52">                    .responseMsg(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())</span>
+<span class="nc" id="L53">                    .build();</span>
+<span class="nc" id="L54">        }</span>
+
+<span class="nc" id="L56">        return ResponseEntity.ok(apiResponse);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BugFeedbackStrategy.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tg_query_api</a> &gt; <a href="index.source.html" class="el_package">com.qre.tg.query.api.service.strategy</a> &gt; <span class="el_source">BugFeedbackStrategy.java</span></div><h1>BugFeedbackStrategy.java</h1><pre class="source lang-java linenums">package com.qre.tg.query.api.service.strategy;
+
+import com.qre.tg.entity.feedback.FeedbackPK;
+import org.springframework.stereotype.Component;
+
+@Component
+<span class="fc" id="L7">public class BugFeedbackStrategy implements FeedbackStrategy {</span>
+
+    @Override
+    public String generateAcknowledgmentSubject() {
+<span class="nc" id="L11">        return &quot;SQRTS - Thank you for catching Our Bugs&quot;;</span>
+    }
+
+    @Override
+    public String generateAcknowledgment(FeedbackPK feedback) {
+<span class="nc" id="L16">        return String.format(&quot;&quot;&quot;</span>
+                Dear %s,
+                \nWe sincerely appreciate you bringing the issue to our attention. Our team is currently investigating the reported bug. Your input is invaluable as we continually strive to improve SQRTS, we'll work diligently to resolve it as soon as possible.
+                \nTicket ID: %s has been created to track this issue. A Customer Service Representative will be in contact with you within 3 - 5 working days.
+                \nThank you for being a part of our journey.
+                \nBug Reported:
+                %s
+<span class="nc" id="L23">                &quot;&quot;&quot;, feedback.getName(), feedback.getFeedback_id().toString(), feedback.getMessage());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
