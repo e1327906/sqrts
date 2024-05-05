@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TripFareServiceFactoryImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tg_query_api</a> &gt; <a href="index.source.html" class="el_package">com.qre.tg.query.api.service.impl</a> &gt; <span class="el_source">TripFareServiceFactoryImpl.java</span></div><h1>TripFareServiceFactoryImpl.java</h1><pre class="source lang-java linenums">package com.qre.tg.query.api.service.impl;
+
+import com.qre.tg.query.api.service.TripFareService;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashSet;
+
+@Service
+@Transactional
+public class TripFareServiceFactoryImpl {
+
+    private final HolidayTripFareServiceImpl holidayTripFareService;
+
+    private final NormalDayTripFareServiceImpl normalDayTripFareService;
+
+    private HashSet&lt;Date&gt; holidays;
+
+    public TripFareServiceFactoryImpl(HolidayTripFareServiceImpl holidayTripFareService,
+<span class="fc" id="L22">                                      NormalDayTripFareServiceImpl normalDayTripFareService) {</span>
+<span class="fc" id="L23">        this.holidayTripFareService = holidayTripFareService;</span>
+<span class="fc" id="L24">        this.normalDayTripFareService = normalDayTripFareService;</span>
+
+<span class="fc" id="L26">        holidays = new HashSet&lt;&gt;();</span>
+        // Add Singapore holidays for the year 2024
+<span class="fc" id="L28">        holidays.add(createDate(2024, Calendar.JANUARY, 1)); // New Year's Day</span>
+<span class="fc" id="L29">        holidays.add(createDate(2024, Calendar.JANUARY, 24)); // Chinese New Year</span>
+<span class="fc" id="L30">        holidays.add(createDate(2024, Calendar.JANUARY, 25)); // Chinese New Year (2nd day)</span>
+<span class="fc" id="L31">        holidays.add(createDate(2024, Calendar.APRIL, 5)); // Good Friday</span>
+<span class="fc" id="L32">        holidays.add(createDate(2024, Calendar.MAY, 1)); // Labour Day</span>
+<span class="fc" id="L33">        holidays.add(createDate(2024, Calendar.JUNE, 12)); // Hari Raya Haji</span>
+<span class="fc" id="L34">        holidays.add(createDate(2024, Calendar.AUGUST, 9)); // National Day</span>
+<span class="fc" id="L35">        holidays.add(createDate(2024, Calendar.OCTOBER, 23)); // Deepavali</span>
+<span class="fc" id="L36">        holidays.add(createDate(2024, Calendar.DECEMBER, 25)); // Christmas Day</span>
+        // You can add more holidays as needed
+<span class="fc" id="L38">    }</span>
+
+    public TripFareService createTripFare(boolean isHoliday) {
+<span class="nc bnc" id="L41" title="All 2 branches missed.">        if (isHoliday) {</span>
+<span class="nc" id="L42">            return holidayTripFareService;</span>
+        } else {
+<span class="nc" id="L44">            return normalDayTripFareService;</span>
+        }
+    }
+
+    public boolean isHoliday(Date dateToCheck) {
+<span class="nc" id="L49">        Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L50">        cal.setTime(dateToCheck);</span>
+<span class="nc" id="L51">        int year = cal.get(Calendar.YEAR);</span>
+        // Create a date without time (set time to midnight)
+<span class="nc" id="L53">        Date dateWithoutTime = createDate(year, cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));</span>
+<span class="nc" id="L54">        return holidays.contains(dateWithoutTime);</span>
+    }
+
+    private Date createDate(int year, int month, int day) {
+<span class="fc" id="L58">        Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L59">        cal.set(year, month, day, 0, 0, 0);</span>
+<span class="fc" id="L60">        cal.set(Calendar.MILLISECOND, 0);</span>
+<span class="fc" id="L61">        return cal.getTime();</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

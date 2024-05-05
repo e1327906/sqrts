@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthenticationControllerImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tg_query_api</a> &gt; <a href="index.source.html" class="el_package">com.qre.tg.query.api.controller.impl</a> &gt; <span class="el_source">AuthenticationControllerImpl.java</span></div><h1>AuthenticationControllerImpl.java</h1><pre class="source lang-java linenums">package com.qre.tg.query.api.controller.impl;
+
+import com.qre.cmel.ecommsvcs.sdk.dto.MessageDto;
+import com.qre.cmel.ecommsvcs.sdk.service.EmailService;
+import com.qre.cmel.ecommsvcs.sdk.service.SmsService;
+import com.qre.cmel.otp.sdk.service.OtpService;
+import com.qre.tg.dto.auth.AuthenticationRequest;
+import com.qre.tg.dto.auth.AuthenticationResponse;
+import com.qre.tg.dto.base.APIResponse;
+import com.qre.tg.dto.user.OtpRequest;
+import com.qre.tg.dto.user.UserRequest;
+import com.qre.tg.query.api.config.ApplicationProperties;
+import com.qre.tg.query.api.service.impl.AuthenticationServiceImpl;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.mail.MessagingException;
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+import java.io.IOException;
+
+@RestController
+@RequestMapping(&quot;/api/v1/auth&quot;)
+<span class="fc" id="L31">@RequiredArgsConstructor</span>
+public class AuthenticationControllerImpl {
+
+<span class="fc" id="L34">    private final Logger logger = LoggerFactory.getLogger(this.getClass());</span>
+
+    private final AuthenticationServiceImpl service;
+
+    private final OtpService otpService;
+
+    private final EmailService emailService;
+
+    private final SmsService smsService;
+
+    private final ApplicationProperties applicationProperties;
+
+    @PostMapping(&quot;/Register&quot;)
+    public ResponseEntity&lt;AuthenticationResponse&gt; register(@Valid @RequestBody UserRequest userRequest) {
+
+        AuthenticationResponse response;
+        try {
+<span class="fc" id="L51">            response = service.register(userRequest);</span>
+<span class="fc" id="L52">        } catch (IllegalArgumentException e) {</span>
+<span class="fc" id="L53">            logger.error(&quot;Bad Request during user registration: {}&quot;, e.getMessage(), e);</span>
+<span class="fc" id="L54">            return ResponseEntity.badRequest().build();</span>
+<span class="fc" id="L55">        } catch (Exception e) {</span>
+<span class="fc" id="L56">            e.printStackTrace();</span>
+<span class="fc" id="L57">            logger.error(&quot;Unexpected error during user registration&quot;, e);</span>
+<span class="fc" id="L58">            return ResponseEntity.internalServerError().build();</span>
+<span class="fc" id="L59">        }</span>
+<span class="fc" id="L60">        return ResponseEntity.ok(response);</span>
+    }
+
+    @PostMapping(&quot;/Authenticate&quot;)
+    public ResponseEntity&lt;AuthenticationResponse&gt; authenticate(
+            @RequestBody AuthenticationRequest request
+    ) {
+<span class="fc" id="L67">        logger.info(&quot;AuthenticationControllerImpl.Authenticate {}&quot;, request);</span>
+<span class="fc" id="L68">        return ResponseEntity.ok(service.authenticate(request));</span>
+    }
+
+    @PostMapping(&quot;/RefreshToken&quot;)
+    public ResponseEntity&lt;AuthenticationResponse&gt; refreshToken(
+            HttpServletRequest request
+    ) {
+<span class="nc" id="L75">        return ResponseEntity.ok(service.refreshToken(request));</span>
+    }
+
+    @PostMapping(&quot;/SendOtp&quot;)
+    public ResponseEntity&lt;APIResponse&gt; sendOtp(@RequestBody OtpRequest otpRequest) throws MessagingException, IOException {
+
+<span class="nc" id="L81">        logger.info(&quot;Method:{}&quot;, &quot;sendOtp&quot;);</span>
+
+<span class="nc" id="L83">        int otp = otpService.generateOTP(otpRequest.getUserName());</span>
+<span class="nc" id="L84">        String message = applicationProperties.getEmailMessage().replace(&quot;$&quot;, String.valueOf(otp));</span>
+
+<span class="nc" id="L86">        MessageDto messageDto = MessageDto.builder()</span>
+<span class="nc" id="L87">                .message(message)</span>
+<span class="nc" id="L88">                .subject(applicationProperties.getEmailSubject())</span>
+<span class="nc" id="L89">                .to(otpRequest.getUserName())</span>
+<span class="nc" id="L90">                .build();</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">        if (otpRequest.isEmailOrPhone()) {</span>
+<span class="nc" id="L92">            emailService.send(messageDto);</span>
+        } else {
+<span class="nc" id="L94">            smsService.send(messageDto);</span>
+        }
+
+<span class="nc" id="L97">        APIResponse apiResponse = new APIResponse(String.valueOf(HttpStatus.OK.value()),</span>
+<span class="nc" id="L98">                HttpStatus.OK.getReasonPhrase(), null);</span>
+
+<span class="nc" id="L100">        return ResponseEntity.ok(apiResponse);</span>
+    }
+
+    @PostMapping(&quot;/ValidateOtp&quot;)
+    public ResponseEntity&lt;APIResponse&gt; validateOtp(@RequestBody OtpRequest otpRequest) {
+
+<span class="nc" id="L106">        logger.info(&quot;Method:{}&quot;, &quot;validateOtp&quot;);</span>
+<span class="nc" id="L107">        boolean isValid = otpService.validateOTP(otpRequest.getUserName(), otpRequest.getOtpNum());</span>
+        APIResponse apiResponse;
+<span class="nc bnc" id="L109" title="All 2 branches missed.">        if (isValid) {</span>
+<span class="nc" id="L110">            logger.info(&quot;validated otp&quot;);</span>
+            //userService.verify(otpDto.getUserName(), otpDto.isEmailOrPhone());
+<span class="nc" id="L112">            apiResponse = APIResponse.builder()</span>
+<span class="nc" id="L113">                    .responseCode(String.valueOf(HttpStatus.OK.value()))</span>
+<span class="nc" id="L114">                    .responseMsg(HttpStatus.OK.getReasonPhrase())</span>
+<span class="nc" id="L115">                    .responseData(null)</span>
+<span class="nc" id="L116">                    .build();</span>
+
+        } else {
+<span class="nc" id="L119">            apiResponse = APIResponse.builder()</span>
+<span class="nc" id="L120">                    .responseCode(String.valueOf(HttpStatus.NOT_FOUND.value()))</span>
+<span class="nc" id="L121">                    .responseMsg(HttpStatus.NOT_FOUND.getReasonPhrase())</span>
+<span class="nc" id="L122">                    .responseData(null)</span>
+<span class="nc" id="L123">                    .build();</span>
+        }
+
+<span class="nc" id="L126">        return ResponseEntity.ok(apiResponse);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TrainFareStrategy.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tg_query_api</a> &gt; <a href="index.source.html" class="el_package">com.qre.tg.query.api.service.impl</a> &gt; <span class="el_source">TrainFareStrategy.java</span></div><h1>TrainFareStrategy.java</h1><pre class="source lang-java linenums">package com.qre.tg.query.api.service.impl;
+
+import com.qre.cmel.exception.ExceptionMsg;
+import com.qre.cmel.exception.FareNotFoundException;
+import com.qre.tg.dao.fare.TrainFareMatrixRepository;
+import com.qre.tg.dto.fare.FareRequest;
+import com.qre.tg.entity.fare.TrainFareMatrix;
+import com.qre.tg.entity.fare.TrainFareMatrixPK;
+import com.qre.tg.entity.ticket.TicketMaster;
+import com.qre.tg.query.api.service.TransportModeStrategy;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.util.Optional;
+
+@Component
+<span class="fc" id="L17">public class TrainFareStrategy implements TransportModeStrategy {</span>
+
+    @Autowired
+    private TrainFareMatrixRepository trainFareMatrixRepository;
+
+    @Override
+    public long calculateFare(FareRequest fareRequest) {
+
+<span class="nc" id="L25">        TrainFareMatrixPK pk = TrainFareMatrixPK.builder()</span>
+<span class="nc" id="L26">                .destStnId(fareRequest.getEndPoint())</span>
+<span class="nc" id="L27">                .srcStnId(fareRequest.getStartPoint())</span>
+<span class="nc" id="L28">                .ticketTypeId(fareRequest.getTicketType())</span>
+<span class="nc" id="L29">                .build();</span>
+
+        /*TrainFareMatrix fareMatrix = trainFareMatrixRepository.findById(pk)
+                .orElseThrow(() -&gt; new FareNotFoundException(ExceptionMsg.FARE_NOT_FOUND));*/
+
+<span class="nc" id="L34">        Optional&lt;TrainFareMatrix&gt; fareMatrix = trainFareMatrixRepository.findById(pk);</span>
+<span class="nc bnc" id="L35" title="All 2 branches missed.">        if (fareMatrix.isEmpty()){</span>
+<span class="nc" id="L36">            return 10;</span>
+        }
+
+<span class="nc" id="L39">        return fareMatrix.get().getFare();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

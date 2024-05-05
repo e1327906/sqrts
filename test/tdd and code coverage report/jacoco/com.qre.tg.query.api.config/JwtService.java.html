@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JwtService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tg_query_api</a> &gt; <a href="index.source.html" class="el_package">com.qre.tg.query.api.config</a> &gt; <span class="el_source">JwtService.java</span></div><h1>JwtService.java</h1><pre class="source lang-java linenums">package com.qre.tg.query.api.config;
+
+import com.qre.tg.entity.user.User;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.security.Key;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
+
+@Service
+<span class="fc" id="L19">public class JwtService {</span>
+
+  @Value(&quot;${app.security.jwt.secret-key}&quot;)
+  private String secretKey;
+  @Value(&quot;${app.security.jwt.expiration}&quot;)
+  private long jwtExpiration;
+  @Value(&quot;${app.security.jwt.refresh-token.expiration}&quot;)
+  private long refreshExpiration;
+
+  public String extractUsername(String token) {
+<span class="nc" id="L29">    return extractClaim(token, Claims::getSubject);</span>
+  }
+
+  public &lt;T&gt; T extractClaim(String token, Function&lt;Claims, T&gt; claimsResolver) {
+<span class="nc" id="L33">    final Claims claims = extractAllClaims(token);</span>
+<span class="nc" id="L34">    return claimsResolver.apply(claims);</span>
+  }
+
+  public String generateToken(User user) {
+<span class="fc" id="L38">    return generateToken(new HashMap&lt;&gt;(), user);</span>
+  }
+
+  public String generateToken(
+      Map&lt;String, Object&gt; extraClaims,
+      User user
+  ) {
+<span class="fc" id="L45">    return buildToken(extraClaims, user, jwtExpiration);</span>
+  }
+
+  public String generateRefreshToken(
+          User user
+  ) {
+<span class="fc" id="L51">    return buildToken(new HashMap&lt;&gt;(), user, refreshExpiration);</span>
+  }
+
+  private String buildToken(
+          Map&lt;String, Object&gt; extraClaims,
+          User user,
+          long expiration
+  ) {
+<span class="fc" id="L59">    return Jwts</span>
+<span class="fc" id="L60">            .builder()</span>
+<span class="fc" id="L61">            .setClaims(extraClaims)</span>
+<span class="fc" id="L62">            .setSubject(user.getEmail())</span>
+<span class="fc" id="L63">            .setIssuedAt(new Date(System.currentTimeMillis()))</span>
+<span class="fc" id="L64">            .setExpiration(new Date(System.currentTimeMillis() + expiration))</span>
+<span class="fc" id="L65">            .signWith(getSignInKey(), SignatureAlgorithm.HS256)</span>
+<span class="fc" id="L66">            .compact();</span>
+  }
+
+  public boolean isTokenValid(String token, User user) {
+<span class="nc" id="L70">    final String username = extractUsername(token);</span>
+<span class="nc bnc" id="L71" title="All 4 branches missed.">    return (username.equals(user.getEmail())) &amp;&amp; !isTokenExpired(token);</span>
+  }
+
+  private boolean isTokenExpired(String token) {
+<span class="nc" id="L75">    return extractExpiration(token).before(new Date());</span>
+  }
+
+  private Date extractExpiration(String token) {
+<span class="nc" id="L79">    return extractClaim(token, Claims::getExpiration);</span>
+  }
+
+  private Claims extractAllClaims(String token) {
+<span class="nc" id="L83">    return Jwts</span>
+<span class="nc" id="L84">        .parserBuilder()</span>
+<span class="nc" id="L85">        .setSigningKey(getSignInKey())</span>
+<span class="nc" id="L86">        .build()</span>
+<span class="nc" id="L87">        .parseClaimsJws(token)</span>
+<span class="nc" id="L88">        .getBody();</span>
+  }
+
+  private Key getSignInKey() {
+<span class="fc" id="L92">    byte[] keyBytes = Decoders.BASE64.decode(secretKey);</span>
+<span class="fc" id="L93">    return Keys.hmacShaKeyFor(keyBytes);</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

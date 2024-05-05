@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserControllerImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tg_query_api</a> &gt; <a href="index.source.html" class="el_package">com.qre.tg.query.api.controller.impl</a> &gt; <span class="el_source">UserControllerImpl.java</span></div><h1>UserControllerImpl.java</h1><pre class="source lang-java linenums">package com.qre.tg.query.api.controller.impl;
+
+import com.qre.tg.dto.base.APIResponse;
+import com.qre.tg.dto.user.ChangePasswordRequest;
+import com.qre.tg.query.api.config.LogoutService;
+import com.qre.tg.query.api.controller.UserController;
+import com.qre.tg.query.api.service.UserService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.security.Principal;
+
+@RestController
+@RequestMapping(&quot;/api/v1/users&quot;)
+<span class="fc" id="L19">@RequiredArgsConstructor</span>
+public class UserControllerImpl implements UserController {
+
+    private final UserService service;
+    private final LogoutService logoutService;
+
+    @PostMapping(&quot;/ChangePassword&quot;)
+    public ResponseEntity&lt;?&gt; changePassword(
+            @RequestBody ChangePasswordRequest request,
+            Principal connectedUser
+    ) {
+<span class="nc" id="L30">        service.changePassword(request);</span>
+<span class="nc" id="L31">        APIResponse apiResponse = APIResponse.builder()</span>
+<span class="nc" id="L32">                .responseCode(String.valueOf(HttpStatus.OK))</span>
+<span class="nc" id="L33">                .responseMsg(HttpStatus.OK.getReasonPhrase())</span>
+<span class="nc" id="L34">                .build();</span>
+<span class="nc" id="L35">        return ResponseEntity.ok(apiResponse);</span>
+    }
+
+
+    @PostMapping(&quot;/Logout&quot;)
+    public void logout(HttpServletRequest request, HttpServletResponse response) {
+<span class="nc" id="L41">        logoutService.logout(request, response, null); // Assuming no authentication object is needed for logout</span>
+        // You can customize the response or add additional logic as needed
+<span class="nc" id="L43">    }</span>
+
+    @GetMapping(&quot;/GetUsers&quot;)
+    @Override
+    public ResponseEntity&lt;APIResponse&gt; getAllUser() {
+<span class="nc" id="L48">        APIResponse apiResponse = APIResponse.builder()</span>
+<span class="nc" id="L49">                .responseCode(String.valueOf(HttpStatus.OK))</span>
+<span class="nc" id="L50">                .responseMsg(HttpStatus.OK.getReasonPhrase())</span>
+<span class="nc" id="L51">                .responseData(service.getAllUser())</span>
+<span class="nc" id="L52">                .build();</span>
+<span class="nc" id="L53">        return ResponseEntity.ok(apiResponse);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
