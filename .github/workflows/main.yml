@@ -1,4 +1,4 @@
-name: SQRTS CICD with Maven
+name: SQRTS CICD
 
 on:
   push:
@@ -18,7 +18,7 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      #Set up Maven cache 
+      #Set up Maven cache
       - name: Cache Maven packages
         #This action allows caching dependencies and build outputs to improve workflow execution time.
         uses: actions/cache@v1
